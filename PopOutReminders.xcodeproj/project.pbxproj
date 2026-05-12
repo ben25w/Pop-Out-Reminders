@@ -14,9 +14,9 @@
 		322919BDDDE6E1475D5AA4D3 /* ScheduledView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB95EAE08A9C6595508122BD /* ScheduledView.swift */; };
 		3501D562616B6D037B274D21 /* FlaggedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B74BD6B67C3EB5B51E06325 /* FlaggedView.swift */; };
 		5018E851989A3FF4CC4CD3E0 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 614BBB56D92238E1E819AD72 /* AppDelegate.swift */; };
+		563E2AE988669276BC5FE24B /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B9694FA8F9C4F0BAE985140 /* main.swift */; };
 		60A9D0B767BD657BD9EC1B35 /* SidebarListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3DB96B48B50DAA12DAD7FA6 /* SidebarListView.swift */; };
 		6FA660DE3F1FC85D2B5D9297 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 216D4A8D34FA34278F9FAAEF /* Assets.xcassets */; };
-		988EBFD87BCE79263E5AF42E /* SideRemindApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B26E043A2346366210A865B /* SideRemindApp.swift */; };
 		9EF18AB1FB50A53792FC3883 /* ListDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46D9C634CFF7993507272BA5 /* ListDetailView.swift */; };
 		9FA718DD35DFB293259CA32C /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E0645FE566E504D3D2B1A08 /* SettingsView.swift */; };
 		A5139688D3A7B15B0986C7B7 /* ReminderRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A661459ED8A317C7E3924A7A /* ReminderRowView.swift */; };
@@ -30,11 +30,11 @@
 		216D4A8D34FA34278F9FAAEF /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		2B74BD6B67C3EB5B51E06325 /* FlaggedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlaggedView.swift; sourceTree = "<group>"; };
 		46D9C634CFF7993507272BA5 /* ListDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListDetailView.swift; sourceTree = "<group>"; };
+		5B9694FA8F9C4F0BAE985140 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		614BBB56D92238E1E819AD72 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		6B1F42E4122BAB316FB5E85D /* RemindersManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemindersManager.swift; sourceTree = "<group>"; };
 		7D8AF37CE58392E85BAC3D41 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		7E0645FE566E504D3D2B1A08 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
-		9B26E043A2346366210A865B /* SideRemindApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SideRemindApp.swift; sourceTree = "<group>"; };
 		A3DB96B48B50DAA12DAD7FA6 /* SidebarListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarListView.swift; sourceTree = "<group>"; };
 		A661459ED8A317C7E3924A7A /* ReminderRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderRowView.swift; sourceTree = "<group>"; };
 		B30A216E3543A2355AE26876 /* TodayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayView.swift; sourceTree = "<group>"; };
@@ -73,13 +73,13 @@
 				1272909AE2241569A89C3F31 /* ContentView.swift */,
 				2B74BD6B67C3EB5B51E06325 /* FlaggedView.swift */,
 				46D9C634CFF7993507272BA5 /* ListDetailView.swift */,
+				5B9694FA8F9C4F0BAE985140 /* main.swift */,
 				A661459ED8A317C7E3924A7A /* ReminderRowView.swift */,
 				6B1F42E4122BAB316FB5E85D /* RemindersManager.swift */,
 				DB95EAE08A9C6595508122BD /* ScheduledView.swift */,
 				7E0645FE566E504D3D2B1A08 /* SettingsView.swift */,
 				A3DB96B48B50DAA12DAD7FA6 /* SidebarListView.swift */,
 				DA494A5DEAAD98CE3563A93C /* SidebarPanel.swift */,
-				9B26E043A2346366210A865B /* SideRemindApp.swift */,
 				B30A216E3543A2355AE26876 /* TodayView.swift */,
 			);
 			path = SideRemind;
@@ -166,10 +166,10 @@
 				2040BDC3A893017DA1DF56B9 /* RemindersManager.swift in Sources */,
 				322919BDDDE6E1475D5AA4D3 /* ScheduledView.swift in Sources */,
 				9FA718DD35DFB293259CA32C /* SettingsView.swift in Sources */,
-				988EBFD87BCE79263E5AF42E /* SideRemindApp.swift in Sources */,
 				60A9D0B767BD657BD9EC1B35 /* SidebarListView.swift in Sources */,
 				068E155823D04FEAFF86D616 /* SidebarPanel.swift in Sources */,
 				D481A163B2F507D32ABA8C74 /* TodayView.swift in Sources */,
+				563E2AE988669276BC5FE24B /* main.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
