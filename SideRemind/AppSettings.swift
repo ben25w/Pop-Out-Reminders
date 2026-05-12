@@ -1,4 +1,5 @@
 import Foundation
+import EventKit
 
 class AppSettings: ObservableObject {
     static let shared = AppSettings()
@@ -20,6 +21,13 @@ class AppSettings: ObservableObject {
         didSet { UserDefaults.standard.set(calendarOrder, forKey: "calendarOrder") }
     }
 
+    @Published var defaultCalendarId: String? {
+        didSet { UserDefaults.standard.set(defaultCalendarId, forKey: "defaultCalendarId") }
+    }
+    @Published var showCompleted: Bool {
+        didSet { UserDefaults.standard.set(showCompleted, forKey: "showCompleted") }
+    }
+
     private init() {
         let ud = UserDefaults.standard
         let w  = ud.double(forKey: "panelWidth")
@@ -30,6 +38,8 @@ class AppSettings: ObservableObject {
         sidebarWidth        = sw > 0 ? CGFloat(sw)  : 150
         hiddenCalendarIds   = Set(ud.stringArray(forKey: "hiddenCalendarIds") ?? [])
         calendarOrder       = ud.stringArray(forKey: "calendarOrder") ?? []
+        defaultCalendarId   = ud.string(forKey: "defaultCalendarId")
+        showCompleted       = ud.bool(forKey: "showCompleted")
     }
 
     func toggleHidden(_ calendarId: String) {
@@ -38,5 +48,13 @@ class AppSettings: ObservableObject {
         } else {
             hiddenCalendarIds.insert(calendarId)
         }
+    }
+
+    @MainActor func effectiveDefaultCalendar(from manager: RemindersManager) -> EKCalendar? {
+        if let id = defaultCalendarId,
+           let cal = manager.lists.first(where: { $0.calendarIdentifier == id }) {
+            return cal
+        }
+        return manager.defaultCalendar
     }
 }

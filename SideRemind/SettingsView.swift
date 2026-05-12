@@ -21,6 +21,8 @@ struct SettingsView: View {
                 VStack(alignment: .leading, spacing: 0) {
                     sizeSection
                     Divider().padding(.horizontal, 16)
+                    remindersSection
+                    Divider().padding(.horizontal, 16)
                     listsSection
                 }
             }
@@ -128,6 +130,48 @@ struct SettingsView: View {
             Slider(value: value, in: range, step: step)
                 .controlSize(.small)
         }
+    }
+
+    // MARK: - Reminders section
+
+    private var remindersSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            sectionLabel("REMINDERS")
+
+            HStack {
+                Text("Default List")
+                    .font(.system(size: 12, weight: .medium))
+                Spacer()
+                Picker("", selection: Binding(
+                    get: { settings.defaultCalendarId ?? "" },
+                    set: { settings.defaultCalendarId = $0.isEmpty ? nil : $0 }
+                )) {
+                    Text("System Default").tag("")
+                    ForEach(manager.lists, id: \.calendarIdentifier) { cal in
+                        HStack {
+                            Circle()
+                                .fill(Color(cgColor: cal.cgColor))
+                                .frame(width: 8, height: 8)
+                            Text(cal.title)
+                        }
+                        .tag(cal.calendarIdentifier)
+                    }
+                }
+                .labelsHidden()
+                .frame(maxWidth: 160)
+            }
+
+            HStack {
+                Text("Show Completed Items")
+                    .font(.system(size: 12, weight: .medium))
+                Spacer()
+                Toggle("", isOn: $settings.showCompleted)
+                    .toggleStyle(.switch)
+                    .controlSize(.small)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
     }
 
     // MARK: - Lists section

@@ -4,7 +4,9 @@ import EventKit
 struct ListDetailView: View {
     let calendarIdentifier: String
     @EnvironmentObject var manager: RemindersManager
+    @EnvironmentObject var settings: AppSettings
     @State private var reminders: [EKReminder] = []
+    @State private var completed: [EKReminder] = []
     @State private var isLoading = true
 
     private var calendar: EKCalendar? {
@@ -26,6 +28,7 @@ struct ListDetailView: View {
         }
         .task(id: calendarIdentifier) { await load() }
         .onChange(of: manager.version) { _, _ in Task { await load() } }
+        .onChange(of: settings.showCompleted) { _, _ in Task { await load() } }
     }
 
     private var header: some View {
@@ -59,7 +62,7 @@ struct ListDetailView: View {
     private var content: some View {
         if isLoading {
             ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
-        } else if reminders.isEmpty {
+        } else if reminders.isEmpty && completed.isEmpty {
             emptyState(icon: "checkmark.circle", message: "No reminders\nType below or tap + to add one")
                 .frame(maxHeight: .infinity)
         } else {
@@ -70,6 +73,9 @@ struct ListDetailView: View {
                             .environmentObject(manager)
                         Divider().padding(.leading, 42)
                     }
+                    if settings.showCompleted && !completed.isEmpty {
+                        completedSection
+                    }
                     Color.clear.frame(maxWidth: .infinity, minHeight: 8)
                 }
             }
@@ -77,10 +83,36 @@ struct ListDetailView: View {
         }
     }
 
+    private var completedSection: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Text("Completed")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundColor(.secondary)
+                Spacer()
+            }
+            .padding(.horizontal, 14)
+            .padding(.top, 16)
+            .padding(.bottom, 6)
+
+            ForEach(completed, id: \.calendarItemIdentifier) { r in
+                ReminderRowView(reminder: r)
+                    .environmentObject(manager)
+                    .opacity(0.55)
+                Divider().padding(.leading, 42)
+            }
+        }
+    }
+
     private func load() async {
         isLoading = true
         if let cal = calendar {
             reminders = await manager.fetchReminders(for: cal)
+            if settings.showCompleted {
+                completed = await manager.fetchCompletedReminders(for: cal)
+            } else {
+                completed = []
+            }
         }
         isLoading = false
     }

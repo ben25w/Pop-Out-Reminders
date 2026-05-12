@@ -59,6 +59,7 @@ class AddReminderWindowController: NSObject, NSWindowDelegate {
         let hosting = NSHostingView(rootView:
             AddReminderView(preselectedCalendar: calendar, defaultDueDate: defaultDueDate)
                 .environmentObject(manager)
+                .environmentObject(AppSettings.shared)
         )
         hosting.sizingOptions = []
 

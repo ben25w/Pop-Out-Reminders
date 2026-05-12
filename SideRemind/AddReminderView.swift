@@ -6,12 +6,18 @@ struct AddReminderView: View {
     let defaultDueDate: Date?
 
     @EnvironmentObject var manager: RemindersManager
+    @EnvironmentObject var settings: AppSettings
 
     @State private var title = ""
     @State private var notes = ""
     @State private var hasDueDate = false
     @State private var dueDate = Date()
     @State private var selectedCalendarId: String
+    @State private var priority: Int = 0
+
+    private let priorityOptions: [(label: String, value: Int)] = [
+        ("None", 0), ("Low", 9), ("Medium", 5), ("High", 1)
+    ]
 
     // Always resolves to a valid tag so SwiftUI's Picker never sees ""
     private var safeCalendarBinding: Binding<String> {
@@ -20,7 +26,7 @@ struct AddReminderView: View {
                 if manager.lists.contains(where: { $0.calendarIdentifier == selectedCalendarId }) {
                     return selectedCalendarId
                 }
-                return manager.defaultCalendar?.calendarIdentifier
+                return settings.effectiveDefaultCalendar(from: manager)?.calendarIdentifier
                     ?? manager.lists.first?.calendarIdentifier
                     ?? selectedCalendarId
             },
@@ -31,8 +37,6 @@ struct AddReminderView: View {
     init(preselectedCalendar: EKCalendar? = nil, defaultDueDate: Date? = nil) {
         self.preselectedCalendar = preselectedCalendar
         self.defaultDueDate = defaultDueDate
-        // Seed from preselectedCalendar so first render already has a value;
-        // task {} below fills in the default if this is still empty.
         _selectedCalendarId = State(initialValue: preselectedCalendar?.calendarIdentifier ?? "")
     }
 
@@ -67,6 +71,11 @@ struct AddReminderView: View {
                                 .tag(cal.calendarIdentifier)
                             }
                         }
+                        Picker("Priority", selection: $priority) {
+                            ForEach(priorityOptions, id: \.value) { opt in
+                                Text(opt.label).tag(opt.value)
+                            }
+                        }
                     }
                 }
             }
@@ -78,10 +87,9 @@ struct AddReminderView: View {
                 hasDueDate = true
                 dueDate = date
             }
-            // Fill in calendar if init couldn't (no preselectedCalendar provided)
             if selectedCalendarId.isEmpty ||
                !manager.lists.contains(where: { $0.calendarIdentifier == selectedCalendarId }) {
-                selectedCalendarId = manager.defaultCalendar?.calendarIdentifier
+                selectedCalendarId = settings.effectiveDefaultCalendar(from: manager)?.calendarIdentifier
                     ?? manager.lists.first?.calendarIdentifier
                     ?? ""
             }
@@ -114,7 +122,8 @@ struct AddReminderView: View {
             title: trimmed,
             notes: notes.isEmpty ? nil : notes,
             dueDate: hasDueDate ? dueDate : nil,
-            calendar: calendar
+            calendar: calendar,
+            priority: priority
         )
         AddReminderWindowController.shared.close()
     }

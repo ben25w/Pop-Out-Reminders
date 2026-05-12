@@ -78,11 +78,12 @@ class RemindersManager: ObservableObject {
 
     // MARK: - Mutations
 
-    func addReminder(title: String, notes: String?, dueDate: Date?, calendar: EKCalendar?) throws {
+    func addReminder(title: String, notes: String?, dueDate: Date?, calendar: EKCalendar?, priority: Int = 0) throws {
         let reminder = EKReminder(eventStore: store)
         reminder.title = title
         reminder.notes = notes
         reminder.calendar = calendar ?? store.defaultCalendarForNewReminders()
+        reminder.priority = priority
         if let dueDate {
             reminder.dueDateComponents = Calendar.current.dateComponents(
                 [.year, .month, .day, .hour, .minute], from: dueDate)
@@ -100,6 +101,16 @@ class RemindersManager: ObservableObject {
     func deleteReminder(_ reminder: EKReminder) throws {
         try store.remove(reminder, commit: true)
         Task { await fetchAll() }
+    }
+
+    func fetchCompletedReminders(for calendar: EKCalendar) async -> [EKReminder] {
+        let thirtyDaysAgo = Calendar.current.date(byAdding: .day, value: -30, to: Date())!
+        let pred = store.predicateForCompletedReminders(
+            withCompletionDateStarting: thirtyDaysAgo, ending: nil, calendars: [calendar])
+        let results = await fetchWith(predicate: pred)
+        return results.sorted {
+            ($0.completionDate ?? .distantPast) > ($1.completionDate ?? .distantPast)
+        }
     }
 
     func fetchScheduledReminders() async -> [EKReminder] {
