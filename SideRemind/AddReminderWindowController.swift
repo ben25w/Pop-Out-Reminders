@@ -27,6 +27,7 @@ class AddReminderWindowController: NSObject, NSWindowDelegate {
         win.delegate = self
         win.contentView = hosting
         win.center()
+        NSApp.activate(ignoringOtherApps: true)
         win.makeKeyAndOrderFront(nil)
         window = win
     }
