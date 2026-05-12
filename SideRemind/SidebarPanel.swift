@@ -55,8 +55,12 @@ class SidebarPanel: NSPanel {
         .dropFirst()
         .receive(on: DispatchQueue.main)
         .sink { [weak self] in
-            guard let self, self.panelVisible else { return }
-            self.setFrame(self.visibleRect(), display: true)
+            // Defer setFrame to the next run-loop iteration so it never fires
+            // synchronously inside a SwiftUI layout pass (which causes recursion).
+            DispatchQueue.main.async {
+                guard let self, self.panelVisible else { return }
+                self.setFrame(self.visibleRect(), display: true)
+            }
         }
         .store(in: &cancellables)
 

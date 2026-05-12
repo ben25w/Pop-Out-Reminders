@@ -3,18 +3,10 @@ import Foundation
 class AppSettings: ObservableObject {
     static let shared = AppSettings()
 
-    // Panel geometry — observed by SidebarPanel via Combine
-    @Published var panelWidth: CGFloat = 390 {
-        didSet { panelWidth = max(300, min(660, panelWidth)) }
-    }
-    @Published var panelHeightFraction: Double = 0.70 {
-        didSet { panelHeightFraction = max(0.40, min(0.95, panelHeightFraction)) }
-    }
-
-    // Sidebar list column width (internal split)
-    @Published var sidebarWidth: CGFloat = 150 {
-        didSet { sidebarWidth = max(120, min(240, sidebarWidth)) }
-    }
+    // Panel geometry — Slider in: ranges already clamp these, no didSet needed
+    @Published var panelWidth: CGFloat = 390
+    @Published var panelHeightFraction: Double = 0.70
+    @Published var sidebarWidth: CGFloat = 150
 
     // Persisted list preferences
     @Published var hiddenCalendarIds: Set<String> {

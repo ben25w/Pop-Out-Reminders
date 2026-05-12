@@ -2,51 +2,51 @@ import SwiftUI
 import EventKit
 
 struct AddReminderView: View {
-    @EnvironmentObject var manager: RemindersManager
-    var preselectedCalendar: EKCalendar?
-    var defaultDueDate: Date? = nil  // pass Date() from Today view to pre-fill today
+    let preselectedCalendar: EKCalendar?
+    let defaultDueDate: Date?
 
+    @EnvironmentObject var manager: RemindersManager
     @Environment(\.dismiss) private var dismiss
+
     @State private var title = ""
     @State private var notes = ""
     @State private var hasDueDate = false
     @State private var dueDate = Date()
-    @State private var selectedCalendarId = ""
+    @State private var selectedCalendarId: String
 
-    private var selectedCalendar: EKCalendar? {
-        manager.lists.first { $0.calendarIdentifier == selectedCalendarId }
+    // Always resolves to a valid tag so SwiftUI's Picker never sees ""
+    private var safeCalendarBinding: Binding<String> {
+        Binding(
+            get: {
+                if manager.lists.contains(where: { $0.calendarIdentifier == selectedCalendarId }) {
+                    return selectedCalendarId
+                }
+                return manager.defaultCalendar?.calendarIdentifier
+                    ?? manager.lists.first?.calendarIdentifier
+                    ?? selectedCalendarId
+            },
+            set: { selectedCalendarId = $0 }
+        )
+    }
+
+    init(preselectedCalendar: EKCalendar? = nil, defaultDueDate: Date? = nil) {
+        self.preselectedCalendar = preselectedCalendar
+        self.defaultDueDate = defaultDueDate
+        // Seed from preselectedCalendar so first render already has a value;
+        // task {} below fills in the default if this is still empty.
+        _selectedCalendarId = State(initialValue: preselectedCalendar?.calendarIdentifier ?? "")
     }
 
     var body: some View {
         VStack(spacing: 0) {
-            // Toolbar
-            HStack {
-                Button("Cancel") { dismiss() }
-                    .buttonStyle(.plain)
-                    .foregroundColor(.accentColor)
-
-                Spacer()
-                Text("New Reminder")
-                    .font(.system(size: 14, weight: .semibold))
-                Spacer()
-
-                Button("Add") { save() }
-                    .buttonStyle(.plain)
-                    .foregroundColor(title.trimmingCharacters(in: .whitespaces).isEmpty ? .secondary : .accentColor)
-                    .disabled(title.trimmingCharacters(in: .whitespaces).isEmpty)
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-
+            toolbar
             Divider()
-
             Form {
                 Section {
                     TextField("Title", text: $title)
                     TextField("Notes", text: $notes, axis: .vertical)
                         .lineLimit(2...5)
                 }
-
                 Section {
                     Toggle("Due Date", isOn: $hasDueDate.animation())
                     if hasDueDate {
@@ -55,10 +55,9 @@ struct AddReminderView: View {
                             .labelsHidden()
                     }
                 }
-
                 if !manager.lists.isEmpty {
                     Section {
-                        Picker("List", selection: $selectedCalendarId) {
+                        Picker("List", selection: safeCalendarBinding) {
                             ForEach(manager.lists, id: \.calendarIdentifier) { cal in
                                 HStack {
                                     Circle()
@@ -75,27 +74,48 @@ struct AddReminderView: View {
             .formStyle(.grouped)
         }
         .frame(width: 360)
-        .onAppear {
-            // Pre-fill due date if provided (e.g. Today view passes Date())
+        .task {
             if let date = defaultDueDate {
                 hasDueDate = true
                 dueDate = date
             }
-            selectedCalendarId = preselectedCalendar?.calendarIdentifier
-                ?? manager.defaultCalendar?.calendarIdentifier
-                ?? manager.lists.first?.calendarIdentifier
-                ?? ""
+            // Fill in calendar if init couldn't (no preselectedCalendar provided)
+            if selectedCalendarId.isEmpty ||
+               !manager.lists.contains(where: { $0.calendarIdentifier == selectedCalendarId }) {
+                selectedCalendarId = manager.defaultCalendar?.calendarIdentifier
+                    ?? manager.lists.first?.calendarIdentifier
+                    ?? ""
+            }
         }
+    }
+
+    private var toolbar: some View {
+        HStack {
+            Button("Cancel") { dismiss() }
+                .buttonStyle(.plain)
+                .foregroundColor(.accentColor)
+            Spacer()
+            Text("New Reminder")
+                .font(.system(size: 14, weight: .semibold))
+            Spacer()
+            Button("Add") { save() }
+                .buttonStyle(.plain)
+                .foregroundColor(title.trimmingCharacters(in: .whitespaces).isEmpty ? .secondary : .accentColor)
+                .disabled(title.trimmingCharacters(in: .whitespaces).isEmpty)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
     }
 
     private func save() {
         let trimmed = title.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty else { return }
+        let calendar = manager.lists.first { $0.calendarIdentifier == selectedCalendarId }
         try? manager.addReminder(
             title: trimmed,
             notes: notes.isEmpty ? nil : notes,
             dueDate: hasDueDate ? dueDate : nil,
-            calendar: selectedCalendar
+            calendar: calendar
         )
         dismiss()
     }
