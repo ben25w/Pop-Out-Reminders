@@ -92,7 +92,7 @@ struct ContentView: View {
                         }
                         // Drag left = panel gets wider
                         let delta = value.startLocation.x - value.location.x
-                        settings.setPanelWidth(panelDragStartWidth + delta)
+                        settings.panelWidth = panelDragStartWidth + delta
                     }
                     .onEnded { _ in panelDragging = false }
             )

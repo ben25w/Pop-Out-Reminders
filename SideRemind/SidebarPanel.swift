@@ -1,10 +1,12 @@
 import AppKit
 import SwiftUI
+import Combine
 
 class SidebarPanel: NSPanel {
     private let remindersManager = RemindersManager()
     private let settings = AppSettings.shared
     private var panelVisible = false
+    private var cancellables = Set<AnyCancellable>()
 
     convenience init() {
         self.init(contentRect: .zero,
@@ -45,11 +47,18 @@ class SidebarPanel: NSPanel {
         ])
         contentView = blur
 
-        // Wire up width changes from SwiftUI drag handle
-        settings.onPanelWidthChange = { [weak self] newWidth in
+        // Observe width and height changes — live-update the frame if visible
+        Publishers.Merge(
+            settings.$panelWidth.map { _ in () },
+            settings.$panelHeightFraction.map { _ in () }
+        )
+        .dropFirst()
+        .receive(on: DispatchQueue.main)
+        .sink { [weak self] in
             guard let self, self.panelVisible else { return }
-            self.updateVisibleFrame(width: newWidth, animated: false)
+            self.setFrame(self.visibleRect(), display: true)
         }
+        .store(in: &cancellables)
 
         // Start off-screen
         if let screen = NSScreen.main {
@@ -60,56 +69,42 @@ class SidebarPanel: NSPanel {
 
     // MARK: - Frame helpers
 
-    private func panelRect(screen: NSScreen, width: CGFloat? = nil) -> NSRect {
-        let w = width ?? settings.panelWidth
-        let sf = screen.frame
-        let h = sf.height * 0.70
+    private func visibleRect(screen: NSScreen? = nil) -> NSRect {
+        let s = screen ?? NSScreen.main ?? NSScreen.screens[0]
+        let sf = s.frame
+        let w = settings.panelWidth
+        let h = sf.height * CGFloat(settings.panelHeightFraction)
         let y = sf.minY + (sf.height - h) / 2
         return NSRect(x: sf.maxX - w, y: y, width: w, height: h)
     }
 
-    private func offscreenRect(screen: NSScreen, width: CGFloat? = nil) -> NSRect {
-        let w = width ?? settings.panelWidth
-        let sf = screen.frame
-        let h = sf.height * 0.70
+    private func offscreenRect(screen: NSScreen? = nil) -> NSRect {
+        let s = screen ?? NSScreen.main ?? NSScreen.screens[0]
+        let sf = s.frame
+        let w = settings.panelWidth
+        let h = sf.height * CGFloat(settings.panelHeightFraction)
         let y = sf.minY + (sf.height - h) / 2
         return NSRect(x: sf.maxX, y: y, width: w, height: h)
-    }
-
-    private func updateVisibleFrame(width: CGFloat, animated: Bool) {
-        guard let screen = NSScreen.main else { return }
-        let target = panelRect(screen: screen, width: width)
-        if animated {
-            NSAnimationContext.runAnimationGroup { ctx in
-                ctx.duration = 0.15
-                ctx.timingFunction = CAMediaTimingFunction(name: .easeOut)
-                animator().setFrame(target, display: true)
-            }
-        } else {
-            setFrame(target, display: true)
-        }
     }
 
     // MARK: - Show / Hide
 
     func show() {
-        guard let screen = NSScreen.main else { return }
         panelVisible = true
         orderFrontRegardless()
         NSAnimationContext.runAnimationGroup { ctx in
             ctx.duration = 0.25
             ctx.timingFunction = CAMediaTimingFunction(name: .easeOut)
-            animator().setFrame(panelRect(screen: screen), display: true)
+            animator().setFrame(visibleRect(), display: true)
         }
     }
 
     func hide() {
-        guard let screen = NSScreen.main else { return }
         panelVisible = false
         NSAnimationContext.runAnimationGroup { ctx in
             ctx.duration = 0.2
             ctx.timingFunction = CAMediaTimingFunction(name: .easeIn)
-            animator().setFrame(offscreenRect(screen: screen), display: true)
+            animator().setFrame(offscreenRect(), display: true)
         }
     }
 }

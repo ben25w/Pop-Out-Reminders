@@ -3,8 +3,18 @@ import Foundation
 class AppSettings: ObservableObject {
     static let shared = AppSettings()
 
-    @Published var panelWidth: CGFloat = 390
-    @Published var sidebarWidth: CGFloat = 150
+    // Panel geometry — observed by SidebarPanel via Combine
+    @Published var panelWidth: CGFloat = 390 {
+        didSet { panelWidth = max(300, min(660, panelWidth)) }
+    }
+    @Published var panelHeightFraction: Double = 0.70 {
+        didSet { panelHeightFraction = max(0.40, min(0.95, panelHeightFraction)) }
+    }
+
+    // Sidebar list column width (internal split)
+    @Published var sidebarWidth: CGFloat = 150 {
+        didSet { sidebarWidth = max(120, min(240, sidebarWidth)) }
+    }
 
     // Persisted list preferences
     @Published var hiddenCalendarIds: Set<String> {
@@ -14,17 +24,9 @@ class AppSettings: ObservableObject {
         didSet { UserDefaults.standard.set(calendarOrder, forKey: "calendarOrder") }
     }
 
-    var onPanelWidthChange: ((CGFloat) -> Void)?
-
     private init() {
         hiddenCalendarIds = Set(UserDefaults.standard.stringArray(forKey: "hiddenCalendarIds") ?? [])
         calendarOrder = UserDefaults.standard.stringArray(forKey: "calendarOrder") ?? []
-    }
-
-    func setPanelWidth(_ w: CGFloat) {
-        let clamped = max(300, min(660, w))
-        panelWidth = clamped
-        onPanelWidthChange?(clamped)
     }
 
     func toggleHidden(_ calendarId: String) {
@@ -33,9 +35,5 @@ class AppSettings: ObservableObject {
         } else {
             hiddenCalendarIds.insert(calendarId)
         }
-    }
-
-    func applyOrder(from lists: [any Identifiable]) {
-        // Called on first load to seed calendarOrder if empty
     }
 }

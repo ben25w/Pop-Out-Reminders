@@ -135,10 +135,12 @@ struct SmartListRow: View {
                         .padding(.trailing, 4)
                 }
             }
-            .padding(.vertical, 7)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 9)
             .padding(.horizontal, 8)
             .background(isSelected ? Color.accentColor.opacity(0.15) : Color.clear)
             .cornerRadius(8)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }
@@ -168,10 +170,12 @@ struct CalendarRow: View {
 
                 Spacer()
             }
-            .padding(.vertical, 7)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 9)
             .padding(.horizontal, 8)
             .background(isSelected ? Color.accentColor.opacity(0.15) : Color.clear)
             .cornerRadius(8)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }
