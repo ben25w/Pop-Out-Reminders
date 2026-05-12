@@ -1,7 +1,22 @@
 import SwiftUI
+import EventKit
 
 struct TodayView: View {
     @EnvironmentObject var manager: RemindersManager
+
+    private var startOfToday: Date { Calendar.current.startOfDay(for: Date()) }
+
+    private var overdueReminders: [EKReminder] {
+        manager.todayReminders.filter {
+            ($0.dueDateComponents.flatMap { Calendar.current.date(from: $0) } ?? .distantFuture) < startOfToday
+        }
+    }
+
+    private var dueToday: [EKReminder] {
+        manager.todayReminders.filter {
+            ($0.dueDateComponents.flatMap { Calendar.current.date(from: $0) } ?? .distantFuture) >= startOfToday
+        }
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -45,23 +60,54 @@ struct TodayView: View {
 
     @ViewBuilder
     private var reminderList: some View {
-        ScrollView {
-            LazyVStack(spacing: 0) {
-                if manager.todayReminders.isEmpty {
-                    emptyState(icon: "star.circle", message: "No reminders today\nDouble-click anywhere to add one")
-                        .frame(minHeight: 200)
-                } else {
-                    ForEach(manager.todayReminders, id: \.calendarItemIdentifier) { r in
-                        ReminderRowView(reminder: r)
-                            .environmentObject(manager)
-                        Divider().padding(.leading, 42)
+        if manager.todayReminders.isEmpty {
+            emptyState(icon: "star.circle", message: "No reminders today\nDouble-click anywhere to add one")
+        } else {
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: 0, pinnedViews: .sectionHeaders) {
+                    if !overdueReminders.isEmpty {
+                        Section {
+                            ForEach(overdueReminders, id: \.calendarItemIdentifier) { r in
+                                ReminderRowView(reminder: r)
+                                    .environmentObject(manager)
+                                Divider().padding(.leading, 42)
+                            }
+                        } header: {
+                            sectionHeader("OVERDUE", color: .red)
+                        }
                     }
+
+                    if !dueToday.isEmpty {
+                        Section {
+                            ForEach(dueToday, id: \.calendarItemIdentifier) { r in
+                                ReminderRowView(reminder: r)
+                                    .environmentObject(manager)
+                                Divider().padding(.leading, 42)
+                            }
+                        } header: {
+                            // Only show "TODAY" header when overdue section is also visible
+                            if !overdueReminders.isEmpty {
+                                sectionHeader("TODAY", color: .secondary)
+                            }
+                        }
+                    }
+
+                    Color.clear
+                        .frame(maxWidth: .infinity, minHeight: 80)
+                        .contentShape(Rectangle())
                 }
-                Color.clear
-                    .frame(maxWidth: .infinity, minHeight: 80)
-                    .contentShape(Rectangle())
             }
         }
+    }
+
+    private func sectionHeader(_ title: String, color: Color) -> some View {
+        Text(title)
+            .font(.system(size: 10, weight: .semibold))
+            .foregroundColor(color)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 6)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(.ultraThinMaterial)
     }
 }
 

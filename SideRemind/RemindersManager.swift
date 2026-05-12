@@ -37,10 +37,15 @@ class RemindersManager: ObservableObject {
 
     func fetchTodayReminders() async {
         let cal = Calendar.current
-        let start = cal.startOfDay(for: Date())
-        let end = cal.date(byAdding: .day, value: 1, to: start)!
-        let pred = store.predicateForIncompleteReminders(withDueDateStarting: start, ending: end, calendars: nil)
-        todayReminders = await fetchWith(predicate: pred)
+        let endOfToday = cal.date(byAdding: .day, value: 1, to: cal.startOfDay(for: Date()))!
+        // nil start = include all overdue reminders (EventKit documented behaviour)
+        let pred = store.predicateForIncompleteReminders(withDueDateStarting: nil, ending: endOfToday, calendars: nil)
+        let results = await fetchWith(predicate: pred)
+        todayReminders = results.sorted {
+            let d1 = $0.dueDateComponents.flatMap { cal.date(from: $0) } ?? .distantFuture
+            let d2 = $1.dueDateComponents.flatMap { cal.date(from: $0) } ?? .distantFuture
+            return d1 < d2
+        }
     }
 
     func fetchReminders(for calendar: EKCalendar) async -> [EKReminder] {
