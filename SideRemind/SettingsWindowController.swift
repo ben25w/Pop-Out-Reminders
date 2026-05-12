@@ -6,6 +6,7 @@ class SettingsWindowController: NSObject, NSWindowDelegate {
     static let shared = SettingsWindowController()
 
     private var window: NSWindow?
+    var isVisible: Bool { window?.isVisible ?? false }
 
     func open(manager: RemindersManager) {
         if let existing = window, existing.isVisible {
@@ -27,6 +28,7 @@ class SettingsWindowController: NSObject, NSWindowDelegate {
             defer: false
         )
         win.title = "Settings"
+        win.level = .floating
         win.isReleasedWhenClosed = false
         win.delegate = self
         win.contentView = hosting
@@ -49,6 +51,7 @@ class AddReminderWindowController: NSObject, NSWindowDelegate {
     static let shared = AddReminderWindowController()
 
     private var window: NSWindow?
+    var isVisible: Bool { window?.isVisible ?? false }
 
     func open(manager: RemindersManager, calendar: EKCalendar? = nil, defaultDueDate: Date? = nil) {
         window?.close()
@@ -66,6 +69,7 @@ class AddReminderWindowController: NSObject, NSWindowDelegate {
             defer: false
         )
         win.title = "New Reminder"
+        win.level = .floating
         win.isReleasedWhenClosed = false
         win.delegate = self
         win.contentView = hosting
@@ -84,21 +88,20 @@ class AddReminderWindowController: NSObject, NSWindowDelegate {
     }
 }
 
+// Returns true if any popup window is currently open — used by AppDelegate
+// to suppress panel auto-hide while the user is editing.
+var anyPopupVisible: Bool {
+    SettingsWindowController.shared.isVisible || AddReminderWindowController.shared.isVisible
+}
+
 // Place a popup window just to the left of the sidebar panel, near the top.
-// Falls back to top-right of screen if the panel can't be found.
 private func originNearPanel(windowSize: CGSize) -> NSPoint {
     let screen = NSScreen.main ?? NSScreen.screens[0]
     let sf = screen.visibleFrame
-
     let panelFrame = (NSApp.delegate as? AppDelegate)?.panel?.frame
     let panelLeft = panelFrame?.minX ?? sf.maxX
-    let panelTop = panelFrame?.maxY ?? sf.maxY
-
+    let panelTop  = panelFrame?.maxY ?? sf.maxY
     let x = panelLeft - windowSize.width - 8
-    let y = panelTop - windowSize.height
-
-    return NSPoint(
-        x: max(sf.minX, x),
-        y: max(sf.minY, y)
-    )
+    let y = panelTop  - windowSize.height
+    return NSPoint(x: max(sf.minX, x), y: max(sf.minY, y))
 }

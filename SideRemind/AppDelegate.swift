@@ -79,6 +79,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
         } else {
             guard let panel else { return }
+            // Keep panel open while settings or add-reminder window is visible
+            if anyPopupVisible {
+                outsideCount = 0
+                return
+            }
             // Hide after mouse leaves panel area for ~300ms (6 ticks × 50ms)
             if !panel.frame.contains(mouse) {
                 outsideCount += 1
