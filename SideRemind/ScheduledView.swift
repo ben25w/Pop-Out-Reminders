@@ -5,15 +5,55 @@ struct ScheduledView: View {
     @EnvironmentObject var manager: RemindersManager
     @State private var reminders: [EKReminder] = []
     @State private var isLoading = true
+    @State private var collapsed: Set<String> = []
+
+    private struct DateGroup: Identifiable {
+        let id: String
+        let label: String
+        let color: Color
+        let items: [EKReminder]
+    }
+
+    private var groups: [DateGroup] {
+        let cal = Calendar.current
+        let today = cal.startOfDay(for: Date())
+        let tomorrow = cal.date(byAdding: .day, value: 1, to: today)!
+
+        var overdue: [EKReminder] = []
+        var todayItems: [EKReminder] = []
+        var tomorrowItems: [EKReminder] = []
+        var future: [Date: [EKReminder]] = [:]
+
+        for r in reminders {
+            guard let dc = r.dueDateComponents, let date = cal.date(from: dc) else { continue }
+            let day = cal.startOfDay(for: date)
+            if day < today { overdue.append(r) }
+            else if day == today { todayItems.append(r) }
+            else if day == tomorrow { tomorrowItems.append(r) }
+            else { future[day, default: []].append(r) }
+        }
+
+        var result: [DateGroup] = []
+        if !overdue.isEmpty    { result.append(DateGroup(id: "overdue",   label: "Overdue",   color: .red,      items: overdue)) }
+        if !todayItems.isEmpty { result.append(DateGroup(id: "today",     label: "Today",     color: .primary,  items: todayItems)) }
+        if !tomorrowItems.isEmpty { result.append(DateGroup(id: "tomorrow", label: "Tomorrow", color: .secondary, items: tomorrowItems)) }
+        for day in future.keys.sorted() {
+            let label = day.formatted(.dateTime.weekday(.abbreviated).day().month())
+            result.append(DateGroup(id: "\(day.timeIntervalSince1970)", label: label, color: .secondary, items: future[day]!))
+        }
+        return result
+    }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        VStack(spacing: 0) {
             HStack(alignment: .bottom) {
                 Text("Scheduled")
                     .font(.system(size: 22, weight: .bold))
                     .foregroundColor(.red)
                 Spacer()
-                Button { showAdd() } label: {
+                Button {
+                    AddReminderWindowController.shared.open(manager: manager, calendar: manager.defaultCalendar)
+                } label: {
                     Image(systemName: "plus.circle.fill")
                         .font(.system(size: 20))
                         .foregroundColor(.red)
@@ -27,45 +67,67 @@ struct ScheduledView: View {
 
             if isLoading {
                 ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if groups.isEmpty {
+                emptyState(icon: "calendar", message: "No scheduled reminders\nType below or tap + to add one")
+                    .frame(maxHeight: .infinity)
             } else {
                 ScrollView {
-                    LazyVStack(spacing: 0) {
-                        if reminders.isEmpty {
-                            emptyState(icon: "calendar", message: "No scheduled reminders\nDouble-click anywhere to add one")
-                                .frame(minHeight: 200)
-                        } else {
-                            ForEach(reminders, id: \.calendarItemIdentifier) { r in
-                                ReminderRowView(reminder: r)
-                                    .environmentObject(manager)
-                                Divider().padding(.leading, 42)
+                    LazyVStack(spacing: 0, pinnedViews: .sectionHeaders) {
+                        ForEach(groups) { group in
+                            Section {
+                                if !collapsed.contains(group.id) {
+                                    ForEach(group.items, id: \.calendarItemIdentifier) { r in
+                                        ReminderRowView(reminder: r, showCalendarName: true)
+                                            .environmentObject(manager)
+                                        Divider().padding(.leading, 42)
+                                    }
+                                }
+                            } header: {
+                                sectionHeader(group)
                             }
                         }
-                        Color.clear
-                            .frame(maxWidth: .infinity, minHeight: 80)
-                            .contentShape(Rectangle())
+                        Color.clear.frame(maxWidth: .infinity, minHeight: 8)
                     }
                 }
+                .frame(maxHeight: .infinity)
             }
+
+            QuickAddBar(calendar: manager.defaultCalendar)
+                .environmentObject(manager)
         }
-        .simultaneousGesture(TapGesture(count: 2).onEnded { showAdd() })
         .task { await load() }
         .onChange(of: manager.version) { _, _ in Task { await load() } }
     }
 
-    private func showAdd() {
-        AddReminderWindowController.shared.open(manager: manager, calendar: manager.defaultCalendar)
+    private func sectionHeader(_ group: DateGroup) -> some View {
+        let isCollapsed = collapsed.contains(group.id)
+        return Button {
+            if isCollapsed { collapsed.remove(group.id) } else { collapsed.insert(group.id) }
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: isCollapsed ? "chevron.right" : "chevron.down")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundColor(group.color)
+                    .frame(width: 14)
+                Text(group.label)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(group.color)
+                Spacer()
+                Text("\(group.items.count)")
+                    .font(.system(size: 13))
+                    .foregroundColor(.secondary)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .frame(maxWidth: .infinity)
+            .background(.ultraThinMaterial)
+        }
+        .buttonStyle(.plain)
     }
 
     private func load() async {
         isLoading = true
-        let all = await manager.fetchAllIncomplete()
-        reminders = all
-            .filter { $0.dueDateComponents != nil }
-            .sorted {
-                let d1 = $0.dueDateComponents.flatMap { Calendar.current.date(from: $0) } ?? .distantFuture
-                let d2 = $1.dueDateComponents.flatMap { Calendar.current.date(from: $0) } ?? .distantFuture
-                return d1 < d2
-            }
+        reminders = await manager.fetchScheduledReminders()
         isLoading = false
     }
 }

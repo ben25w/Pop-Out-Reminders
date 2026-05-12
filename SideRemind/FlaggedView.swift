@@ -7,13 +7,15 @@ struct FlaggedView: View {
     @State private var isLoading = true
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        VStack(spacing: 0) {
             HStack(alignment: .bottom) {
                 Text("Flagged")
                     .font(.system(size: 22, weight: .bold))
                     .foregroundColor(.orange)
                 Spacer()
-                Button { showAdd() } label: {
+                Button {
+                    AddReminderWindowController.shared.open(manager: manager, calendar: manager.defaultCalendar)
+                } label: {
                     Image(systemName: "plus.circle.fill")
                         .font(.system(size: 20))
                         .foregroundColor(.orange)
@@ -27,33 +29,28 @@ struct FlaggedView: View {
 
             if isLoading {
                 ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if reminders.isEmpty {
+                emptyState(icon: "flag", message: "No flagged reminders\nType below or tap + to add one")
+                    .frame(maxHeight: .infinity)
             } else {
                 ScrollView {
                     LazyVStack(spacing: 0) {
-                        if reminders.isEmpty {
-                            emptyState(icon: "flag", message: "No flagged reminders\nDouble-click anywhere to add one")
-                                .frame(minHeight: 200)
-                        } else {
-                            ForEach(reminders, id: \.calendarItemIdentifier) { r in
-                                ReminderRowView(reminder: r)
-                                    .environmentObject(manager)
-                                Divider().padding(.leading, 42)
-                            }
+                        ForEach(reminders, id: \.calendarItemIdentifier) { r in
+                            ReminderRowView(reminder: r, showCalendarName: true)
+                                .environmentObject(manager)
+                            Divider().padding(.leading, 42)
                         }
-                        Color.clear
-                            .frame(maxWidth: .infinity, minHeight: 80)
-                            .contentShape(Rectangle())
+                        Color.clear.frame(maxWidth: .infinity, minHeight: 8)
                     }
                 }
+                .frame(maxHeight: .infinity)
             }
+
+            QuickAddBar(calendar: manager.defaultCalendar)
+                .environmentObject(manager)
         }
-        .simultaneousGesture(TapGesture(count: 2).onEnded { showAdd() })
         .task { await load() }
         .onChange(of: manager.version) { _, _ in Task { await load() } }
-    }
-
-    private func showAdd() {
-        AddReminderWindowController.shared.open(manager: manager, calendar: manager.defaultCalendar)
     }
 
     private func load() async {

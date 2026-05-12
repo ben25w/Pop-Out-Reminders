@@ -101,4 +101,15 @@ class RemindersManager: ObservableObject {
         try store.remove(reminder, commit: true)
         Task { await fetchAll() }
     }
+
+    func fetchScheduledReminders() async -> [EKReminder] {
+        let far = Calendar.current.date(byAdding: .year, value: 5, to: Date())!
+        let pred = store.predicateForIncompleteReminders(withDueDateStarting: nil, ending: far, calendars: nil)
+        let results = await fetchWith(predicate: pred)
+        return results.sorted {
+            let d1 = $0.dueDateComponents.flatMap { Calendar.current.date(from: $0) } ?? .distantFuture
+            let d2 = $1.dueDateComponents.flatMap { Calendar.current.date(from: $0) } ?? .distantFuture
+            return d1 < d2
+        }
+    }
 }

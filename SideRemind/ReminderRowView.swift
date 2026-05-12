@@ -3,8 +3,14 @@ import EventKit
 
 struct ReminderRowView: View {
     let reminder: EKReminder
+    let showCalendarName: Bool
     @EnvironmentObject var manager: RemindersManager
     @State private var isHovered = false
+
+    init(reminder: EKReminder, showCalendarName: Bool = false) {
+        self.reminder = reminder
+        self.showCalendarName = showCalendarName
+    }
 
     private var accentColor: Color {
         guard let cgc = reminder.calendar?.cgColor else { return .accentColor }
@@ -20,9 +26,25 @@ struct ReminderRowView: View {
         return d < Date() && !reminder.isCompleted
     }
 
+    private var dueDateText: String? {
+        guard let date = dueDate else { return nil }
+        if date < Date() {
+            let f = RelativeDateTimeFormatter()
+            f.unitsStyle = .full
+            f.dateTimeStyle = .named
+            return f.localizedString(for: date, relativeTo: Date())
+        } else if Calendar.current.isDateInToday(date) {
+            if reminder.dueDateComponents?.hour != nil {
+                return date.formatted(.dateTime.hour().minute())
+            }
+            return "Today"
+        } else {
+            return date.formatted(.dateTime.day().month())
+        }
+    }
+
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
-            // Completion circle
             Button {
                 try? manager.toggleComplete(reminder)
             } label: {
@@ -33,7 +55,6 @@ struct ReminderRowView: View {
             .buttonStyle(.plain)
             .padding(.top, 1)
 
-            // Content
             VStack(alignment: .leading, spacing: 3) {
                 Text(reminder.title ?? "")
                     .font(.system(size: 13))
@@ -47,14 +68,33 @@ struct ReminderRowView: View {
                         .lineLimit(2)
                 }
 
-                if let due = dueDate {
-                    HStack(spacing: 3) {
-                        Image(systemName: "calendar")
-                            .font(.system(size: 10))
-                        Text(due, format: .dateTime.day().month().year())
-                            .font(.system(size: 11))
+                let hasCalName = showCalendarName && reminder.calendar != nil
+                let hasDate = dueDateText != nil
+
+                if hasCalName || hasDate {
+                    HStack(spacing: 5) {
+                        if hasCalName, let cal = reminder.calendar {
+                            Circle()
+                                .fill(Color(cgColor: cal.cgColor))
+                                .frame(width: 6, height: 6)
+                            Text(cal.title)
+                                .font(.system(size: 11))
+                                .foregroundColor(.secondary)
+                        }
+                        if hasCalName && hasDate {
+                            Text("·")
+                                .font(.system(size: 11))
+                                .foregroundColor(.secondary)
+                        }
+                        if let dateStr = dueDateText {
+                            Image(systemName: "calendar")
+                                .font(.system(size: 10))
+                                .foregroundColor(isOverdue ? .red : .secondary)
+                            Text(dateStr)
+                                .font(.system(size: 11))
+                                .foregroundColor(isOverdue ? .red : .secondary)
+                        }
                     }
-                    .foregroundColor(isOverdue ? .red : .secondary)
                 }
 
                 if reminder.priority > 0 {
@@ -82,9 +122,9 @@ struct ReminderRowView: View {
 
     private var priorityExclamations: Int {
         switch reminder.priority {
-        case 1: return 3  // High
-        case 5: return 2  // Medium
-        case 9: return 1  // Low
+        case 1: return 3
+        case 5: return 2
+        case 9: return 1
         default: return 0
         }
     }

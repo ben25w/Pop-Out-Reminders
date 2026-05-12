@@ -17,18 +17,15 @@ struct ListDetailView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        VStack(spacing: 0) {
             header
             Divider()
             content
+            QuickAddBar(calendar: calendar)
+                .environmentObject(manager)
         }
-        .simultaneousGesture(TapGesture(count: 2).onEnded { showAdd() })
         .task(id: calendarIdentifier) { await load() }
         .onChange(of: manager.version) { _, _ in Task { await load() } }
-    }
-
-    private func showAdd() {
-        AddReminderWindowController.shared.open(manager: manager, calendar: calendar)
     }
 
     private var header: some View {
@@ -45,7 +42,9 @@ struct ListDetailView: View {
                 }
             }
             Spacer()
-            Button { showAdd() } label: {
+            Button {
+                AddReminderWindowController.shared.open(manager: manager, calendar: calendar)
+            } label: {
                 Image(systemName: "plus.circle.fill")
                     .font(.system(size: 20))
                     .foregroundColor(accentColor)
@@ -60,24 +59,21 @@ struct ListDetailView: View {
     private var content: some View {
         if isLoading {
             ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else if reminders.isEmpty {
+            emptyState(icon: "checkmark.circle", message: "No reminders\nType below or tap + to add one")
+                .frame(maxHeight: .infinity)
         } else {
             ScrollView {
                 LazyVStack(spacing: 0) {
-                    if reminders.isEmpty {
-                        emptyState(icon: "checkmark.circle", message: "No reminders\nDouble-click anywhere to add one")
-                            .frame(minHeight: 200)
-                    } else {
-                        ForEach(reminders, id: \.calendarItemIdentifier) { r in
-                            ReminderRowView(reminder: r)
-                                .environmentObject(manager)
-                            Divider().padding(.leading, 42)
-                        }
+                    ForEach(reminders, id: \.calendarItemIdentifier) { r in
+                        ReminderRowView(reminder: r)
+                            .environmentObject(manager)
+                        Divider().padding(.leading, 42)
                     }
-                    Color.clear
-                        .frame(maxWidth: .infinity, minHeight: 80)
-                        .contentShape(Rectangle())
+                    Color.clear.frame(maxWidth: .infinity, minHeight: 8)
                 }
             }
+            .frame(maxHeight: .infinity)
         }
     }
 

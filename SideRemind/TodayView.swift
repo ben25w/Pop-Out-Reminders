@@ -19,21 +19,14 @@ struct TodayView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        VStack(spacing: 0) {
             header
             Divider()
             reminderList
+            QuickAddBar(calendar: manager.defaultCalendar, defaultDueDate: startOfToday)
+                .environmentObject(manager)
         }
-        .simultaneousGesture(TapGesture(count: 2).onEnded { showAdd() })
         .onChange(of: manager.version) { _, _ in }
-    }
-
-    private func showAdd() {
-        AddReminderWindowController.shared.open(
-            manager: manager,
-            calendar: manager.defaultCalendar,
-            defaultDueDate: Date()
-        )
     }
 
     private var header: some View {
@@ -47,7 +40,13 @@ struct TodayView: View {
                     .foregroundColor(.secondary)
             }
             Spacer()
-            Button { showAdd() } label: {
+            Button {
+                AddReminderWindowController.shared.open(
+                    manager: manager,
+                    calendar: manager.defaultCalendar,
+                    defaultDueDate: Date()
+                )
+            } label: {
                 Image(systemName: "plus.circle.fill")
                     .font(.system(size: 20))
                     .foregroundColor(.yellow)
@@ -61,46 +60,42 @@ struct TodayView: View {
     @ViewBuilder
     private var reminderList: some View {
         if manager.todayReminders.isEmpty {
-            emptyState(icon: "star.circle", message: "No reminders today\nDouble-click anywhere to add one")
+            emptyState(icon: "star.circle", message: "No reminders today\nType below or tap + to add one")
+                .frame(maxHeight: .infinity)
         } else {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 0, pinnedViews: .sectionHeaders) {
                     if !overdueReminders.isEmpty {
                         Section {
                             ForEach(overdueReminders, id: \.calendarItemIdentifier) { r in
-                                ReminderRowView(reminder: r)
+                                ReminderRowView(reminder: r, showCalendarName: true)
                                     .environmentObject(manager)
                                 Divider().padding(.leading, 42)
                             }
                         } header: {
-                            sectionHeader("OVERDUE", color: .red)
+                            sectionLabel("OVERDUE", color: .red)
                         }
                     }
-
                     if !dueToday.isEmpty {
                         Section {
                             ForEach(dueToday, id: \.calendarItemIdentifier) { r in
-                                ReminderRowView(reminder: r)
+                                ReminderRowView(reminder: r, showCalendarName: true)
                                     .environmentObject(manager)
                                 Divider().padding(.leading, 42)
                             }
                         } header: {
-                            // Only show "TODAY" header when overdue section is also visible
                             if !overdueReminders.isEmpty {
-                                sectionHeader("TODAY", color: .secondary)
+                                sectionLabel("TODAY", color: .secondary)
                             }
                         }
                     }
-
-                    Color.clear
-                        .frame(maxWidth: .infinity, minHeight: 80)
-                        .contentShape(Rectangle())
                 }
             }
+            .frame(maxHeight: .infinity)
         }
     }
 
-    private func sectionHeader(_ title: String, color: Color) -> some View {
+    private func sectionLabel(_ title: String, color: Color) -> some View {
         Text(title)
             .font(.system(size: 10, weight: .semibold))
             .foregroundColor(color)
