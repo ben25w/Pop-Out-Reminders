@@ -3,8 +3,7 @@ import EventKit
 
 struct SettingsView: View {
     @EnvironmentObject var manager: RemindersManager
-    @StateObject private var settings = AppSettings.shared
-    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var settings: AppSettings
 
     @State private var orderedIds: [String] = []
 
@@ -35,7 +34,7 @@ struct SettingsView: View {
             Text("Settings")
                 .font(.system(size: 15, weight: .semibold))
             Spacer()
-            Button("Done") { commit(); dismiss() }
+            Button("Done") { commit(); SettingsWindowController.shared.close() }
                 .buttonStyle(.plain)
                 .foregroundColor(.accentColor)
         }

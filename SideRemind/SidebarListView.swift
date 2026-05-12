@@ -4,8 +4,7 @@ import EventKit
 struct SidebarListView: View {
     @Binding var selection: SidebarSelection
     @EnvironmentObject var manager: RemindersManager
-    @StateObject private var settings = AppSettings.shared
-    @State private var showingSettings = false
+    @EnvironmentObject var settings: AppSettings
 
     // Lists filtered and sorted according to user preferences
     private var visibleLists: [EKCalendar] {
@@ -80,7 +79,7 @@ struct SidebarListView: View {
             Divider()
             HStack {
                 Button {
-                    showingSettings = true
+                    SettingsWindowController.shared.open(manager: manager)
                 } label: {
                     HStack(spacing: 5) {
                         Image(systemName: "gearshape")
@@ -96,10 +95,6 @@ struct SidebarListView: View {
 
                 Spacer()
             }
-        }
-        .sheet(isPresented: $showingSettings) {
-            SettingsView()
-                .environmentObject(manager)
         }
     }
 }

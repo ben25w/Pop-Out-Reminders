@@ -10,7 +10,7 @@ enum SidebarSelection: Hashable {
 
 struct ContentView: View {
     @EnvironmentObject var manager: RemindersManager
-    @StateObject private var settings = AppSettings.shared
+    @EnvironmentObject var settings: AppSettings
     @State private var selection: SidebarSelection = .today
 
     // Sidebar drag state

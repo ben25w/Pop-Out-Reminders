@@ -3,13 +3,24 @@ import SwiftUI
 import Combine
 
 class SidebarPanel: NSPanel {
-    private let remindersManager = RemindersManager()
+    let remindersManager = RemindersManager()
     private let settings = AppSettings.shared
     private var panelVisible = false
     private var cancellables = Set<AnyCancellable>()
 
     convenience init() {
-        self.init(contentRect: .zero,
+        // Start with the real off-screen frame so NSHostingView is never
+        // created at zero size — a zero-frame first layout pass confuses
+        // SwiftUI and causes layout recursion / EXC_BAD_ACCESS.
+        let screen = NSScreen.main ?? NSScreen.screens[0]
+        let s = AppSettings.shared
+        let sf = screen.frame
+        let w = s.panelWidth
+        let h = sf.height * CGFloat(s.panelHeightFraction)
+        let y = sf.minY + (sf.height - h) / 2
+        let offscreen = NSRect(x: sf.maxX, y: y, width: w, height: h)
+
+        self.init(contentRect: offscreen,
                   styleMask: [.borderless, .nonactivatingPanel],
                   backing: .buffered,
                   defer: false)
@@ -25,7 +36,6 @@ class SidebarPanel: NSPanel {
         backgroundColor = .clear
         hasShadow = true
 
-        // Frosted glass background
         let blur = NSVisualEffectView()
         blur.material = .sidebar
         blur.blendingMode = .behindWindow
@@ -33,9 +43,12 @@ class SidebarPanel: NSPanel {
         blur.wantsLayer = true
         blur.layer?.cornerRadius = 14
 
+        // Pass AppSettings as an environment object alongside RemindersManager
+        // so every child view uses @EnvironmentObject (one subscription, not many).
         let hosting = NSHostingView(rootView:
             ContentView()
                 .environmentObject(remindersManager)
+                .environmentObject(AppSettings.shared)
         )
         hosting.translatesAutoresizingMaskIntoConstraints = false
         blur.addSubview(hosting)
@@ -47,7 +60,8 @@ class SidebarPanel: NSPanel {
         ])
         contentView = blur
 
-        // Observe width and height changes — live-update the frame if visible
+        // Live-resize when sliders change — deferred to next run-loop
+        // so setFrame never fires synchronously inside a SwiftUI layout pass.
         Publishers.Merge(
             settings.$panelWidth.map { _ in () },
             settings.$panelHeightFraction.map { _ in () }
@@ -55,8 +69,6 @@ class SidebarPanel: NSPanel {
         .dropFirst()
         .receive(on: DispatchQueue.main)
         .sink { [weak self] in
-            // Defer setFrame to the next run-loop iteration so it never fires
-            // synchronously inside a SwiftUI layout pass (which causes recursion).
             DispatchQueue.main.async {
                 guard let self, self.panelVisible else { return }
                 self.setFrame(self.visibleRect(), display: true)
@@ -64,17 +76,13 @@ class SidebarPanel: NSPanel {
         }
         .store(in: &cancellables)
 
-        // Start off-screen
-        if let screen = NSScreen.main {
-            setFrame(offscreenRect(screen: screen), display: false)
-        }
         orderFrontRegardless()
     }
 
     // MARK: - Frame helpers
 
-    private func visibleRect(screen: NSScreen? = nil) -> NSRect {
-        let s = screen ?? NSScreen.main ?? NSScreen.screens[0]
+    private func visibleRect() -> NSRect {
+        let s = NSScreen.main ?? NSScreen.screens[0]
         let sf = s.frame
         let w = settings.panelWidth
         let h = sf.height * CGFloat(settings.panelHeightFraction)
@@ -82,8 +90,8 @@ class SidebarPanel: NSPanel {
         return NSRect(x: sf.maxX - w, y: y, width: w, height: h)
     }
 
-    private func offscreenRect(screen: NSScreen? = nil) -> NSRect {
-        let s = screen ?? NSScreen.main ?? NSScreen.screens[0]
+    private func offscreenRect() -> NSRect {
+        let s = NSScreen.main ?? NSScreen.screens[0]
         let sf = s.frame
         let w = settings.panelWidth
         let h = sf.height * CGFloat(settings.panelHeightFraction)
