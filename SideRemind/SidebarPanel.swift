@@ -51,6 +51,7 @@ class SidebarPanel: NSPanel {
                 .environmentObject(AppSettings.shared)
         )
         hosting.translatesAutoresizingMaskIntoConstraints = false
+        hosting.sizingOptions = []   // prevent re-entrant setContentSize during layout
         blur.addSubview(hosting)
         NSLayoutConstraint.activate([
             hosting.leadingAnchor.constraint(equalTo: blur.leadingAnchor),

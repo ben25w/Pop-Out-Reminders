@@ -6,7 +6,6 @@ struct ListDetailView: View {
     @EnvironmentObject var manager: RemindersManager
     @State private var reminders: [EKReminder] = []
     @State private var isLoading = true
-    @State private var showingAdd = false
 
     private var calendar: EKCalendar? {
         manager.lists.first { $0.calendarIdentifier == calendarIdentifier }
@@ -23,12 +22,13 @@ struct ListDetailView: View {
             Divider()
             content
         }
+        .simultaneousGesture(TapGesture(count: 2).onEnded { showAdd() })
         .task(id: calendarIdentifier) { await load() }
         .onChange(of: manager.version) { _, _ in Task { await load() } }
-        .sheet(isPresented: $showingAdd) {
-            AddReminderView(preselectedCalendar: calendar)
-                .environmentObject(manager)
-        }
+    }
+
+    private func showAdd() {
+        AddReminderWindowController.shared.open(manager: manager, calendar: calendar)
     }
 
     private var header: some View {
@@ -45,7 +45,7 @@ struct ListDetailView: View {
                 }
             }
             Spacer()
-            Button { showingAdd = true } label: {
+            Button { showAdd() } label: {
                 Image(systemName: "plus.circle.fill")
                     .font(.system(size: 20))
                     .foregroundColor(accentColor)
@@ -64,9 +64,8 @@ struct ListDetailView: View {
             ScrollView {
                 LazyVStack(spacing: 0) {
                     if reminders.isEmpty {
-                        emptyState(icon: "checkmark.circle", message: "No reminders\nDouble-click to add one")
+                        emptyState(icon: "checkmark.circle", message: "No reminders\nDouble-click anywhere to add one")
                             .frame(minHeight: 200)
-                            .onTapGesture(count: 2) { showingAdd = true }
                     } else {
                         ForEach(reminders, id: \.calendarItemIdentifier) { r in
                             ReminderRowView(reminder: r)
@@ -74,12 +73,9 @@ struct ListDetailView: View {
                             Divider().padding(.leading, 42)
                         }
                     }
-
-                    // Empty space below list — double-click to add
                     Color.clear
                         .frame(maxWidth: .infinity, minHeight: 80)
                         .contentShape(Rectangle())
-                        .onTapGesture(count: 2) { showingAdd = true }
                 }
             }
         }

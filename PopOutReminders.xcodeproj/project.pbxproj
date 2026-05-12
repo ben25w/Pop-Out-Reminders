@@ -10,6 +10,7 @@
 		068E155823D04FEAFF86D616 /* SidebarPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA494A5DEAAD98CE3563A93C /* SidebarPanel.swift */; };
 		07544D8F3986D2303636E259 /* AddReminderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B979FABCA00A9B68FDCBD487 /* AddReminderView.swift */; };
 		1A6F620AE46D0FAF94970CB6 /* AllRemindersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E873CB6E691356303C75E2BA /* AllRemindersView.swift */; };
+		20277D635FAFA97010E82A38 /* AddReminderWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 706971EE3CAD5A75DC870CB4 /* AddReminderWindowController.swift */; };
 		2040BDC3A893017DA1DF56B9 /* RemindersManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B1F42E4122BAB316FB5E85D /* RemindersManager.swift */; };
 		322919BDDDE6E1475D5AA4D3 /* ScheduledView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB95EAE08A9C6595508122BD /* ScheduledView.swift */; };
 		3501D562616B6D037B274D21 /* FlaggedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B74BD6B67C3EB5B51E06325 /* FlaggedView.swift */; };
@@ -34,6 +35,7 @@
 		5B9694FA8F9C4F0BAE985140 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		614BBB56D92238E1E819AD72 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		6B1F42E4122BAB316FB5E85D /* RemindersManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemindersManager.swift; sourceTree = "<group>"; };
+		706971EE3CAD5A75DC870CB4 /* AddReminderWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddReminderWindowController.swift; sourceTree = "<group>"; };
 		7D8AF37CE58392E85BAC3D41 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		7E0645FE566E504D3D2B1A08 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		A3DB96B48B50DAA12DAD7FA6 /* SidebarListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarListView.swift; sourceTree = "<group>"; };
@@ -68,6 +70,7 @@
 			isa = PBXGroup;
 			children = (
 				B979FABCA00A9B68FDCBD487 /* AddReminderView.swift */,
+				706971EE3CAD5A75DC870CB4 /* AddReminderWindowController.swift */,
 				E873CB6E691356303C75E2BA /* AllRemindersView.swift */,
 				614BBB56D92238E1E819AD72 /* AppDelegate.swift */,
 				7D8AF37CE58392E85BAC3D41 /* AppSettings.swift */,
@@ -159,6 +162,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				07544D8F3986D2303636E259 /* AddReminderView.swift in Sources */,
+				20277D635FAFA97010E82A38 /* AddReminderWindowController.swift in Sources */,
 				1A6F620AE46D0FAF94970CB6 /* AllRemindersView.swift in Sources */,
 				5018E851989A3FF4CC4CD3E0 /* AppDelegate.swift in Sources */,
 				FB2E37916381548AA4610EB2 /* AppSettings.swift in Sources */,

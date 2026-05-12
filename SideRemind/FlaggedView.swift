@@ -5,7 +5,6 @@ struct FlaggedView: View {
     @EnvironmentObject var manager: RemindersManager
     @State private var reminders: [EKReminder] = []
     @State private var isLoading = true
-    @State private var showingAdd = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -14,7 +13,7 @@ struct FlaggedView: View {
                     .font(.system(size: 22, weight: .bold))
                     .foregroundColor(.orange)
                 Spacer()
-                Button { showingAdd = true } label: {
+                Button { showAdd() } label: {
                     Image(systemName: "plus.circle.fill")
                         .font(.system(size: 20))
                         .foregroundColor(.orange)
@@ -32,7 +31,7 @@ struct FlaggedView: View {
                 ScrollView {
                     LazyVStack(spacing: 0) {
                         if reminders.isEmpty {
-                            emptyState(icon: "flag", message: "No flagged reminders")
+                            emptyState(icon: "flag", message: "No flagged reminders\nDouble-click anywhere to add one")
                                 .frame(minHeight: 200)
                         } else {
                             ForEach(reminders, id: \.calendarItemIdentifier) { r in
@@ -44,17 +43,17 @@ struct FlaggedView: View {
                         Color.clear
                             .frame(maxWidth: .infinity, minHeight: 80)
                             .contentShape(Rectangle())
-                            .onTapGesture(count: 2) { showingAdd = true }
                     }
                 }
             }
         }
+        .simultaneousGesture(TapGesture(count: 2).onEnded { showAdd() })
         .task { await load() }
         .onChange(of: manager.version) { _, _ in Task { await load() } }
-        .sheet(isPresented: $showingAdd) {
-            AddReminderView(preselectedCalendar: manager.defaultCalendar)
-                .environmentObject(manager)
-        }
+    }
+
+    private func showAdd() {
+        AddReminderWindowController.shared.open(manager: manager, calendar: manager.defaultCalendar)
     }
 
     private func load() async {

@@ -1,11 +1,13 @@
 import SwiftUI
 import EventKit
+import ServiceManagement
 
 struct SettingsView: View {
     @EnvironmentObject var manager: RemindersManager
     @EnvironmentObject var settings: AppSettings
 
     @State private var orderedIds: [String] = []
+    @State private var launchAtLogin = (SMAppService.mainApp.status == .enabled)
 
     private var orderedLists: [EKCalendar] {
         orderedIds.compactMap { id in manager.lists.first { $0.calendarIdentifier == id } }
@@ -46,6 +48,29 @@ struct SettingsView: View {
 
     private var sizeSection: some View {
         VStack(alignment: .leading, spacing: 12) {
+            sectionLabel("GENERAL")
+
+            HStack {
+                Text("Launch at Login")
+                    .font(.system(size: 12, weight: .medium))
+                Spacer()
+                Toggle("", isOn: $launchAtLogin)
+                    .toggleStyle(.switch)
+                    .controlSize(.small)
+                    .onChange(of: launchAtLogin) { _, newValue in
+                        do {
+                            if newValue {
+                                try SMAppService.mainApp.register()
+                            } else {
+                                try SMAppService.mainApp.unregister()
+                            }
+                        } catch {
+                            launchAtLogin = !newValue
+                        }
+                    }
+            }
+
+            Divider()
             sectionLabel("PANEL SIZE")
 
             // Panel width

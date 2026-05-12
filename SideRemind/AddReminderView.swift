@@ -6,7 +6,6 @@ struct AddReminderView: View {
     let defaultDueDate: Date?
 
     @EnvironmentObject var manager: RemindersManager
-    @Environment(\.dismiss) private var dismiss
 
     @State private var title = ""
     @State private var notes = ""
@@ -91,7 +90,7 @@ struct AddReminderView: View {
 
     private var toolbar: some View {
         HStack {
-            Button("Cancel") { dismiss() }
+            Button("Cancel") { AddReminderWindowController.shared.close() }
                 .buttonStyle(.plain)
                 .foregroundColor(.accentColor)
             Spacer()
@@ -117,6 +116,6 @@ struct AddReminderView: View {
             dueDate: hasDueDate ? dueDate : nil,
             calendar: calendar
         )
-        dismiss()
+        AddReminderWindowController.shared.close()
     }
 }

@@ -2,7 +2,6 @@ import SwiftUI
 
 struct TodayView: View {
     @EnvironmentObject var manager: RemindersManager
-    @State private var showingAdd = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -10,12 +9,16 @@ struct TodayView: View {
             Divider()
             reminderList
         }
+        .simultaneousGesture(TapGesture(count: 2).onEnded { showAdd() })
         .onChange(of: manager.version) { _, _ in }
-        .sheet(isPresented: $showingAdd) {
-            // Pass today's date so the due date auto-fills
-            AddReminderView(preselectedCalendar: manager.defaultCalendar, defaultDueDate: Date())
-                .environmentObject(manager)
-        }
+    }
+
+    private func showAdd() {
+        AddReminderWindowController.shared.open(
+            manager: manager,
+            calendar: manager.defaultCalendar,
+            defaultDueDate: Date()
+        )
     }
 
     private var header: some View {
@@ -29,7 +32,7 @@ struct TodayView: View {
                     .foregroundColor(.secondary)
             }
             Spacer()
-            Button { showingAdd = true } label: {
+            Button { showAdd() } label: {
                 Image(systemName: "plus.circle.fill")
                     .font(.system(size: 20))
                     .foregroundColor(.yellow)
@@ -45,9 +48,8 @@ struct TodayView: View {
         ScrollView {
             LazyVStack(spacing: 0) {
                 if manager.todayReminders.isEmpty {
-                    emptyState(icon: "star.circle", message: "No reminders today\nDouble-click to add one")
+                    emptyState(icon: "star.circle", message: "No reminders today\nDouble-click anywhere to add one")
                         .frame(minHeight: 200)
-                        .onTapGesture(count: 2) { showingAdd = true }
                 } else {
                     ForEach(manager.todayReminders, id: \.calendarItemIdentifier) { r in
                         ReminderRowView(reminder: r)
@@ -55,12 +57,9 @@ struct TodayView: View {
                         Divider().padding(.leading, 42)
                     }
                 }
-
-                // Empty space at bottom — double-click to add
                 Color.clear
                     .frame(maxWidth: .infinity, minHeight: 80)
                     .contentShape(Rectangle())
-                    .onTapGesture(count: 2) { showingAdd = true }
             }
         }
     }
