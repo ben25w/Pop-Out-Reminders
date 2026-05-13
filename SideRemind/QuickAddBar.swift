@@ -14,11 +14,7 @@ struct QuickAddBar: View {
             Divider()
             HStack(spacing: 10) {
                 Button {
-                    AddReminderWindowController.shared.open(
-                        manager: manager,
-                        calendar: calendar,
-                        defaultDueDate: defaultDueDate
-                    )
+                    PanelNavigation.shared.openNew(calendar: calendar, dueDate: defaultDueDate)
                 } label: {
                     Image(systemName: "plus.circle.fill")
                         .font(.system(size: 22))

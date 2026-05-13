@@ -135,7 +135,16 @@ struct ReminderRowView: View {
         .background(isHovered ? Color.primary.opacity(0.05) : Color.clear)
         .contentShape(Rectangle())
         .onHover { isHovered = $0 }
+        .onTapGesture {
+            PanelNavigation.shared.openEdit(reminder)
+        }
         .contextMenu {
+            Button {
+                PanelNavigation.shared.openEdit(reminder)
+            } label: {
+                Label("Edit", systemImage: "pencil")
+            }
+            Divider()
             // Quick date shortcuts
             Button {
                 let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Calendar.current.startOfDay(for: Date()))!

@@ -48,7 +48,7 @@ struct ListDetailView: View {
             }
             Spacer()
             Button {
-                AddReminderWindowController.shared.open(manager: manager, calendar: calendar)
+                PanelNavigation.shared.openNew(calendar: calendar)
             } label: {
                 Image(systemName: "plus.circle.fill")
                     .font(.system(size: 20))

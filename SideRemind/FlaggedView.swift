@@ -15,7 +15,7 @@ struct FlaggedView: View {
                     .foregroundColor(.orange)
                 Spacer()
                 Button {
-                    AddReminderWindowController.shared.open(manager: manager, calendar: settings.effectiveDefaultCalendar(from: manager))
+                    PanelNavigation.shared.openNew(calendar: settings.effectiveDefaultCalendar(from: manager))
                 } label: {
                     Image(systemName: "plus.circle.fill")
                         .font(.system(size: 20))

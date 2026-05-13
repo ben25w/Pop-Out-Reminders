@@ -47,52 +47,10 @@ class SettingsWindowController: NSObject, NSWindowDelegate {
     }
 }
 
-class AddReminderWindowController: NSObject, NSWindowDelegate {
-    static let shared = AddReminderWindowController()
-
-    private var window: NSWindow?
-    var isVisible: Bool { window?.isVisible ?? false }
-
-    func open(manager: RemindersManager, calendar: EKCalendar? = nil, defaultDueDate: Date? = nil) {
-        window?.close()
-
-        let hosting = NSHostingView(rootView:
-            AddReminderView(preselectedCalendar: calendar, defaultDueDate: defaultDueDate)
-                .environmentObject(manager)
-                .environmentObject(AppSettings.shared)
-        )
-        hosting.sizingOptions = []
-
-        let win = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 360, height: 340),
-            styleMask: [.titled, .closable],
-            backing: .buffered,
-            defer: false
-        )
-        win.title = "New Reminder"
-        win.level = .floating
-        win.isReleasedWhenClosed = false
-        win.delegate = self
-        win.contentView = hosting
-        win.setFrameOrigin(originNearPanel(windowSize: win.frame.size))
-        NSApp.activate(ignoringOtherApps: true)
-        win.makeKeyAndOrderFront(nil)
-        window = win
-    }
-
-    func close() {
-        window?.close()
-    }
-
-    func windowWillClose(_ notification: Notification) {
-        window = nil
-    }
-}
-
-// Returns true if any popup window is currently open — used by AppDelegate
+// Returns true if any popup or inline form is open — used by AppDelegate
 // to suppress panel auto-hide while the user is editing.
 var anyPopupVisible: Bool {
-    SettingsWindowController.shared.isVisible || AddReminderWindowController.shared.isVisible
+    SettingsWindowController.shared.isVisible || PanelNavigation.shared.isShowingForm
 }
 
 // Place a popup window just to the left of the sidebar panel, near the top.

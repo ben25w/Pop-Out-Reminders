@@ -63,6 +63,7 @@ class SidebarPanel: NSPanel {
             ContentView()
                 .environmentObject(remindersManager)
                 .environmentObject(AppSettings.shared)
+                .environmentObject(PanelNavigation.shared)
         )
         hosting.translatesAutoresizingMaskIntoConstraints = false
         hosting.sizingOptions = []   // prevent re-entrant setContentSize during layout

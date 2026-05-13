@@ -98,7 +98,7 @@ struct AddReminderView: View {
 
     private var toolbar: some View {
         HStack {
-            Button("Cancel") { AddReminderWindowController.shared.close() }
+            Button("Cancel") { PanelNavigation.shared.dismiss() }
                 .buttonStyle(.plain)
                 .foregroundColor(.accentColor)
             Spacer()
@@ -125,6 +125,6 @@ struct AddReminderView: View {
             calendar: calendar,
             priority: priority
         )
-        AddReminderWindowController.shared.close()
+        PanelNavigation.shared.dismiss()
     }
 }

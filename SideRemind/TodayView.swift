@@ -44,10 +44,9 @@ struct TodayView: View {
             }
             Spacer()
             Button {
-                AddReminderWindowController.shared.open(
-                    manager: manager,
+                PanelNavigation.shared.openNew(
                     calendar: settings.effectiveDefaultCalendar(from: manager),
-                    defaultDueDate: Date()
+                    dueDate: Date()
                 )
             } label: {
                 Image(systemName: "plus.circle.fill")

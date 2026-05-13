@@ -11,6 +11,7 @@ enum SidebarSelection: Hashable {
 struct ContentView: View {
     @EnvironmentObject var manager: RemindersManager
     @EnvironmentObject var settings: AppSettings
+    @EnvironmentObject var nav: PanelNavigation
     @State private var selection: SidebarSelection = .today
 
     // Sidebar drag state
@@ -23,10 +24,22 @@ struct ContentView: View {
 
     var body: some View {
         ZStack(alignment: .leading) {
-            mainLayout
-            panelResizeHandle
+            if nav.isShowingForm {
+                InlineReminderFormView()
+                    .environmentObject(manager)
+                    .environmentObject(settings)
+                    .environmentObject(nav)
+                    .transition(.move(edge: .trailing))
+            } else {
+                mainLayout
+                    .transition(.move(edge: .leading))
+            }
+            if !nav.isShowingForm {
+                panelResizeHandle
+            }
         }
         .background(.clear)
+        .animation(.easeInOut(duration: 0.2), value: nav.isShowingForm)
         .task {
             await manager.requestAccess()
         }

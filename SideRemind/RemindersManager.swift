@@ -8,7 +8,7 @@ class RemindersManager: ObservableObject {
     @Published var isAuthorized = false
     @Published var version = 0
 
-    let store = EKEventStore()
+    let store = EKEventStore()   // internal access for InlineReminderFormView edits
 
     func requestAccess() async {
         do {
