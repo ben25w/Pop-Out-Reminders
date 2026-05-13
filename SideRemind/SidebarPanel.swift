@@ -3,6 +3,20 @@ import SwiftUI
 import Combine
 
 class SidebarPanel: NSPanel {
+
+    // Allow the panel to become the key window so text fields inside it work.
+    override var canBecomeKey: Bool { true }
+
+    // Intercept every click: make the panel key before SwiftUI processes the
+    // event, so @FocusState and text field input work in a nonactivatingPanel.
+    override func sendEvent(_ event: NSEvent) {
+        if event.type == .leftMouseDown, !isKeyWindow {
+            NSApp.activate(ignoringOtherApps: true)
+            makeKey()
+        }
+        super.sendEvent(event)
+    }
+
     let remindersManager = RemindersManager()
     private let settings = AppSettings.shared
     private var panelVisible = false

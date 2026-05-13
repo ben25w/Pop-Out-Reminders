@@ -1,4 +1,5 @@
 import Foundation
+import AppKit
 import EventKit
 
 class AppSettings: ObservableObject {

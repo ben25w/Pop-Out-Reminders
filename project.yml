@@ -24,6 +24,7 @@ targets:
     info:
       path: SideRemind/Info.plist
       properties:
+        CFBundleName: Pop Out Reminders
         CFBundleDisplayName: Pop Out Reminders
         LSApplicationCategoryType: public.app-category.productivity
         LSUIElement: YES
