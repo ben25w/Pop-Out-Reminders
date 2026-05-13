@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 import EventKit
 
 struct QuickAddBar: View {
@@ -32,6 +33,13 @@ struct QuickAddBar: View {
                     .focused($focused)
                     .onSubmit { save() }
                     .textFieldStyle(.plain)
+                    .simultaneousGesture(TapGesture().onEnded {
+                        // nonactivatingPanel won't accept keyboard input unless
+                        // we explicitly activate the app and make the panel key.
+                        NSApp.activate(ignoringOtherApps: true)
+                        (NSApp.delegate as? AppDelegate)?.panel?.makeKey()
+                        focused = true
+                    })
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 12)
