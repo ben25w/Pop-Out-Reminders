@@ -37,7 +37,11 @@ class RemindersManager: ObservableObject {
 
     func fetchTodayReminders() async {
         let cal = Calendar.current
-        let endOfToday = cal.date(byAdding: .day, value: 1, to: cal.startOfDay(for: Date()))!
+        // Use 23:59:59 today — EventKit's ending is inclusive, so midnight
+        // of tomorrow would pull in tomorrow's reminders (date-only reminders
+        // are stored as midnight of their day).
+        let startOfTomorrow = cal.date(byAdding: .day, value: 1, to: cal.startOfDay(for: Date()))!
+        let endOfToday = startOfTomorrow.addingTimeInterval(-1)
         // nil start = include all overdue reminders (EventKit documented behaviour)
         let pred = store.predicateForIncompleteReminders(withDueDateStarting: nil, ending: endOfToday, calendars: nil)
         let results = await fetchWith(predicate: pred)
@@ -87,6 +91,17 @@ class RemindersManager: ObservableObject {
         if let dueDate {
             reminder.dueDateComponents = Calendar.current.dateComponents(
                 [.year, .month, .day, .hour, .minute], from: dueDate)
+        }
+        try store.save(reminder, commit: true)
+        Task { await fetchAll() }
+    }
+
+    func updateDueDate(_ reminder: EKReminder, to date: Date?) throws {
+        if let date {
+            reminder.dueDateComponents = Calendar.current.dateComponents(
+                [.year, .month, .day], from: date)
+        } else {
+            reminder.dueDateComponents = nil
         }
         try store.save(reminder, commit: true)
         Task { await fetchAll() }

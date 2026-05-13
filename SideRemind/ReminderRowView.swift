@@ -116,8 +116,58 @@ struct ReminderRowView: View {
         .contentShape(Rectangle())
         .onHover { isHovered = $0 }
         .contextMenu {
-            Button("Delete") { try? manager.deleteReminder(reminder) }
+            // Quick date shortcuts
+            Button {
+                let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Calendar.current.startOfDay(for: Date()))!
+                try? manager.updateDueDate(reminder, to: tomorrow)
+            } label: {
+                Label("Tomorrow", systemImage: "sunrise")
+            }
+
+            Button {
+                try? manager.updateDueDate(reminder, to: nextWeekend)
+            } label: {
+                Label("This Weekend", systemImage: "sun.max")
+            }
+
+            Button {
+                try? manager.updateDueDate(reminder, to: nextMonday)
+            } label: {
+                Label("Next Week", systemImage: "forward")
+            }
+
+            if reminder.dueDateComponents != nil {
+                Button {
+                    try? manager.updateDueDate(reminder, to: nil)
+                } label: {
+                    Label("No Date", systemImage: "xmark.circle")
+                }
+            }
+
+            Divider()
+
+            Button(role: .destructive) {
+                try? manager.deleteReminder(reminder)
+            } label: {
+                Label("Delete", systemImage: "trash")
+            }
         }
+    }
+
+    // Next Saturday
+    private var nextWeekend: Date {
+        let cal = Calendar.current
+        var comps = DateComponents()
+        comps.weekday = 7 // Saturday
+        return cal.nextDate(after: cal.startOfDay(for: Date()), matching: comps, matchingPolicy: .nextTime)!
+    }
+
+    // Next Monday
+    private var nextMonday: Date {
+        let cal = Calendar.current
+        var comps = DateComponents()
+        comps.weekday = 2 // Monday
+        return cal.nextDate(after: cal.startOfDay(for: Date()), matching: comps, matchingPolicy: .nextTime)!
     }
 
     private var priorityExclamations: Int {

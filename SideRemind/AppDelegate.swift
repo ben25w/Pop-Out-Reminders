@@ -8,6 +8,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var isShowing = false
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // Prevent duplicate instances — quit the new copy if one is already running
+        let bundleId = Bundle.main.bundleIdentifier ?? ""
+        let others = NSRunningApplication.runningApplications(withBundleIdentifier: bundleId)
+            .filter { $0 != NSRunningApplication.current }
+        if !others.isEmpty {
+            NSApp.terminate(nil)
+            return
+        }
+
         NSApp.setActivationPolicy(.accessory)
         setupStatusItem()
         setupPanel()
@@ -20,13 +29,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         if let button = statusItem?.button {
             button.image = NSImage(systemSymbolName: "list.bullet.rectangle.portrait",
-                                   accessibilityDescription: "SideRemind")
+                                   accessibilityDescription: "Pop Out Reminders")
         }
         let menu = NSMenu()
         let toggleItem = NSMenuItem(title: "Toggle Panel", action: #selector(togglePanel), keyEquivalent: "")
         menu.addItem(toggleItem)
         menu.addItem(.separator())
-        menu.addItem(NSMenuItem(title: "Quit SideRemind", action: #selector(quit), keyEquivalent: "q"))
+        menu.addItem(NSMenuItem(title: "Quit Pop Out Reminders", action: #selector(quit), keyEquivalent: "q"))
         statusItem?.menu = menu
     }
 
