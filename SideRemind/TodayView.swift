@@ -24,8 +24,10 @@ struct TodayView: View {
             header
             Divider()
             reminderList
-            QuickAddBar(calendar: settings.effectiveDefaultCalendar(from: manager), defaultDueDate: startOfToday)
-                .environmentObject(manager)
+                .safeAreaInset(edge: .bottom, spacing: 0) {
+                    QuickAddBar(calendar: settings.effectiveDefaultCalendar(from: manager), defaultDueDate: startOfToday)
+                        .environmentObject(manager)
+                }
         }
         .onChange(of: manager.version) { _, _ in }
     }

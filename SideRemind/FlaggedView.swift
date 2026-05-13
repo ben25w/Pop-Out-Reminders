@@ -47,6 +47,8 @@ struct FlaggedView: View {
                 .frame(maxHeight: .infinity)
             }
 
+        }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
             QuickAddBar(calendar: settings.effectiveDefaultCalendar(from: manager))
                 .environmentObject(manager)
         }

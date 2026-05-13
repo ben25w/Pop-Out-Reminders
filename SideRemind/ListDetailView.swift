@@ -23,8 +23,10 @@ struct ListDetailView: View {
             header
             Divider()
             content
-            QuickAddBar(calendar: calendar)
-                .environmentObject(manager)
+                .safeAreaInset(edge: .bottom, spacing: 0) {
+                    QuickAddBar(calendar: calendar)
+                        .environmentObject(manager)
+                }
         }
         .task(id: calendarIdentifier) { await load() }
         .onChange(of: manager.version) { _, _ in Task { await load() } }
