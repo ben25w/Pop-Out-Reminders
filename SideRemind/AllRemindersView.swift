@@ -34,7 +34,7 @@ struct AllRemindersView: View {
                     .foregroundColor(.secondary)
                 Spacer()
                 Button {
-                    AddReminderWindowController.shared.open(manager: manager, calendar: manager.defaultCalendar)
+                    AddReminderWindowController.shared.open(manager: manager, calendar: settings.effectiveDefaultCalendar(from: manager))
                 } label: {
                     Image(systemName: "plus.circle.fill")
                         .font(.system(size: 20))
@@ -74,7 +74,7 @@ struct AllRemindersView: View {
                 .frame(maxHeight: .infinity)
             }
 
-            QuickAddBar(calendar: manager.defaultCalendar)
+            QuickAddBar(calendar: settings.effectiveDefaultCalendar(from: manager))
                 .environmentObject(manager)
         }
         .task { await load() }

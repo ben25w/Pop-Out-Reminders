@@ -3,6 +3,7 @@ import EventKit
 
 struct ScheduledView: View {
     @EnvironmentObject var manager: RemindersManager
+    @EnvironmentObject var settings: AppSettings
     @State private var reminders: [EKReminder] = []
     @State private var isLoading = true
     @State private var collapsed: Set<String> = []
@@ -52,7 +53,7 @@ struct ScheduledView: View {
                     .foregroundColor(.red)
                 Spacer()
                 Button {
-                    AddReminderWindowController.shared.open(manager: manager, calendar: manager.defaultCalendar)
+                    AddReminderWindowController.shared.open(manager: manager, calendar: settings.effectiveDefaultCalendar(from: manager))
                 } label: {
                     Image(systemName: "plus.circle.fill")
                         .font(.system(size: 20))
@@ -92,7 +93,7 @@ struct ScheduledView: View {
                 .frame(maxHeight: .infinity)
             }
 
-            QuickAddBar(calendar: manager.defaultCalendar)
+            QuickAddBar(calendar: settings.effectiveDefaultCalendar(from: manager))
                 .environmentObject(manager)
         }
         .task { await load() }

@@ -3,6 +3,7 @@ import EventKit
 
 struct FlaggedView: View {
     @EnvironmentObject var manager: RemindersManager
+    @EnvironmentObject var settings: AppSettings
     @State private var reminders: [EKReminder] = []
     @State private var isLoading = true
 
@@ -14,7 +15,7 @@ struct FlaggedView: View {
                     .foregroundColor(.orange)
                 Spacer()
                 Button {
-                    AddReminderWindowController.shared.open(manager: manager, calendar: manager.defaultCalendar)
+                    AddReminderWindowController.shared.open(manager: manager, calendar: settings.effectiveDefaultCalendar(from: manager))
                 } label: {
                     Image(systemName: "plus.circle.fill")
                         .font(.system(size: 20))
@@ -46,7 +47,7 @@ struct FlaggedView: View {
                 .frame(maxHeight: .infinity)
             }
 
-            QuickAddBar(calendar: manager.defaultCalendar)
+            QuickAddBar(calendar: settings.effectiveDefaultCalendar(from: manager))
                 .environmentObject(manager)
         }
         .task { await load() }

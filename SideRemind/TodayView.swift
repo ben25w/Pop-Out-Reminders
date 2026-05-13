@@ -3,6 +3,7 @@ import EventKit
 
 struct TodayView: View {
     @EnvironmentObject var manager: RemindersManager
+    @EnvironmentObject var settings: AppSettings
 
     private var startOfToday: Date { Calendar.current.startOfDay(for: Date()) }
 
@@ -23,7 +24,7 @@ struct TodayView: View {
             header
             Divider()
             reminderList
-            QuickAddBar(calendar: manager.defaultCalendar, defaultDueDate: startOfToday)
+            QuickAddBar(calendar: settings.effectiveDefaultCalendar(from: manager), defaultDueDate: startOfToday)
                 .environmentObject(manager)
         }
         .onChange(of: manager.version) { _, _ in }
@@ -43,7 +44,7 @@ struct TodayView: View {
             Button {
                 AddReminderWindowController.shared.open(
                     manager: manager,
-                    calendar: manager.defaultCalendar,
+                    calendar: settings.effectiveDefaultCalendar(from: manager),
                     defaultDueDate: Date()
                 )
             } label: {

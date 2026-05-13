@@ -12,7 +12,7 @@ struct QuickAddBar: View {
     var body: some View {
         VStack(spacing: 0) {
             Divider()
-            HStack(spacing: 12) {
+            HStack(spacing: 10) {
                 Button {
                     AddReminderWindowController.shared.open(
                         manager: manager,
@@ -21,19 +21,21 @@ struct QuickAddBar: View {
                     )
                 } label: {
                     Image(systemName: "plus.circle.fill")
-                        .font(.system(size: 24))
+                        .font(.system(size: 22))
                         .foregroundColor(.accentColor)
                 }
                 .buttonStyle(.plain)
+                .help("Open full form")
 
-                TextField("New reminder", text: $title)
+                TextField("New Reminder…", text: $title)
                     .font(.system(size: 14))
                     .focused($focused)
                     .onSubmit { save() }
+                    .textFieldStyle(.plain)
             }
             .padding(.horizontal, 14)
-            .padding(.vertical, 11)
-            .background(.ultraThinMaterial)
+            .padding(.vertical, 12)
+            .background(.regularMaterial)
         }
     }
 
