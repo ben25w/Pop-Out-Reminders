@@ -1,6 +1,5 @@
 import SwiftUI
 import EventKit
-import UniformTypeIdentifiers
 
 enum SidebarSelection: Hashable {
     case today
@@ -80,9 +79,20 @@ struct ContentView: View {
                             .padding(12)
                             .allowsHitTesting(false)
                     }
-                }
-                .onDrop(of: [UTType.url], isTargeted: $isMailDropTargeted) { providers in
-                    handleEmailDrop(providers)
+                    // AppKit overlay handles the actual drop — SwiftUI's onDrop
+                    // can't load com.apple.mail.email from NSItemProvider.
+                    MailDropOverlay(
+                        onMailDrop: { url in
+                            let cal: EKCalendar? = {
+                                switch selection {
+                                case .list(let id): return manager.lists.first { $0.calendarIdentifier == id }
+                                default: return nil
+                                }
+                            }()
+                            nav.openNew(calendar: cal, mailURL: url)
+                        },
+                        isTargeted: $isMailDropTargeted
+                    )
                 }
         }
     }
@@ -135,36 +145,6 @@ struct ContentView: View {
                     }
                     .onEnded { _ in panelDragging = false }
             )
-    }
-
-    // MARK: - Email drag-drop
-
-    private func handleEmailDrop(_ providers: [NSItemProvider]) -> Bool {
-        guard let provider = providers.first else { return false }
-
-        let urlTypeId = UTType.url.identifier
-        guard provider.hasItemConformingToTypeIdentifier(urlTypeId) else { return false }
-
-        provider.loadItem(forTypeIdentifier: urlTypeId, options: nil) { item, _ in
-            // Mail can hand back a URL, NSURL, or raw Data
-            var url: URL?
-            if let u = item as? URL            { url = u }
-            else if let u = item as? NSURL     { url = u as URL }
-            else if let d = item as? Data      { url = URL(dataRepresentation: d, relativeTo: nil) }
-
-            guard let url, url.scheme == "message" else { return }
-
-            let cal: EKCalendar? = {
-                switch self.selection {
-                case .list(let id): return self.manager.lists.first { $0.calendarIdentifier == id }
-                default: return nil
-                }
-            }()
-            DispatchQueue.main.async {
-                self.nav.openNew(calendar: cal, mailURL: url)
-            }
-        }
-        return true
     }
 
     // MARK: - Detail view switcher
