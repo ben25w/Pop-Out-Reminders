@@ -65,8 +65,11 @@ struct ContentView: View {
                 .overlay(alignment: .center) {
                     if isMailDropTargeted {
                         RoundedRectangle(cornerRadius: 12)
-                            .strokeBorder(Color.accentColor, lineWidth: 2)
-                            .background(Color.accentColor.opacity(0.08).cornerRadius(12))
+                            .fill(Color(NSColor.controlBackgroundColor).opacity(0.96))
+                            .overlay {
+                                RoundedRectangle(cornerRadius: 12)
+                                    .strokeBorder(Color.accentColor, lineWidth: 2)
+                            }
                             .overlay {
                                 VStack(spacing: 8) {
                                     Image(systemName: "envelope.badge.fill")
@@ -104,6 +107,7 @@ struct ContentView: View {
                         },
                         isTargeted: $isMailDropTargeted
                     )
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
         }
     }
