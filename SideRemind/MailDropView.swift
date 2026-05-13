@@ -4,8 +4,13 @@ import SwiftUI
 /// Transparent AppKit view that accepts Apple Mail drags.
 /// SwiftUI's onDrop can't load com.apple.mail.email via NSItemProvider
 /// (times out). Reading the drag pasteboard directly works reliably.
+struct MailDropPayload {
+    let url: URL
+    let subject: String?
+}
+
 struct MailDropOverlay: NSViewRepresentable {
-    let onMailDrop: (URL) -> Void
+    let onMailDrop: (MailDropPayload) -> Void
     @Binding var isTargeted: Bool
 
     func makeNSView(context: Context) -> MailDropNSView {
@@ -21,7 +26,7 @@ struct MailDropOverlay: NSViewRepresentable {
 }
 
 class MailDropNSView: NSView {
-    var onMailDrop: ((URL) -> Void)?
+    var onMailDrop: ((MailDropPayload) -> Void)?
     var onTargetChanged: ((Bool) -> Void)?
 
     private let mailType = NSPasteboard.PasteboardType("com.apple.mail.email")
@@ -80,17 +85,17 @@ class MailDropNSView: NSView {
         onTargetChanged?(false)
 
         if let url = firstURL(from: pb, preferredType: mailType, messageOnly: true) {
-            onMailDrop?(url)
+            onMailDrop?(MailDropPayload(url: url, subject: firstSubject(from: pb)))
             return true
         }
 
         if let url = firstURL(from: pb, preferredType: .URL, messageOnly: true) {
-            onMailDrop?(url)
+            onMailDrop?(MailDropPayload(url: url, subject: firstSubject(from: pb)))
             return true
         }
 
         if let url = firstURL(from: pb, preferredType: .URL, messageOnly: false) {
-            onMailDrop?(url)
+            onMailDrop?(MailDropPayload(url: url, subject: firstSubject(from: pb)))
             return true
         }
 
@@ -151,6 +156,40 @@ class MailDropNSView: NSView {
         return nil
     }
 
+    private func firstSubject(from pb: NSPasteboard) -> String? {
+        var candidates: [String] = []
+
+        for item in pb.pasteboardItems ?? [] {
+            for type in item.types {
+                if let string = item.string(forType: type) {
+                    candidates.append(string)
+                }
+            }
+        }
+
+        for type in pb.types ?? [] {
+            if let string = pb.string(forType: type) {
+                candidates.append(string)
+            }
+
+            if let data = pb.data(forType: type) {
+                candidates.append(contentsOf: decodedStrings(from: data))
+                if let plist = try? PropertyListSerialization.propertyList(from: data, options: [], format: nil),
+                   let subject = subject(in: plist) {
+                    return subject
+                }
+            }
+        }
+
+        for candidate in candidates {
+            if let subject = subject(in: candidate) {
+                return subject
+            }
+        }
+
+        return nil
+    }
+
     private func decodedStrings(from data: Data) -> [String] {
         var values: [String] = []
         let encodings: [String.Encoding] = [.utf8, .utf16, .utf16LittleEndian, .utf16BigEndian, .ascii]
@@ -166,6 +205,70 @@ class MailDropNSView: NSView {
         }
 
         return values
+    }
+
+    private func subject(in object: Any) -> String? {
+        if let dict = object as? [String: Any] {
+            for key in ["subject", "Subject", "NSSubject", "MessageSubject"] {
+                if let value = dict[key] as? String,
+                   let subject = cleanedSubject(value) {
+                    return subject
+                }
+            }
+
+            for value in dict.values {
+                if let subject = subject(in: value) {
+                    return subject
+                }
+            }
+        }
+
+        if let array = object as? [Any] {
+            for value in array {
+                if let subject = subject(in: value) {
+                    return subject
+                }
+            }
+        }
+
+        if let string = object as? String {
+            return subject(in: string)
+        }
+
+        return nil
+    }
+
+    private func subject(in raw: String) -> String? {
+        let patterns = [
+            #"(?im)^subject:\s*(.+)$"#,
+            #"(?i)"subject"\s*[:=]\s*"([^"]+)""#,
+            #"(?i)\bsubject\s*[:=]\s*([^\n\r,}]+)"#
+        ]
+
+        for pattern in patterns {
+            if let match = raw.range(of: pattern, options: .regularExpression) {
+                let matched = String(raw[match])
+                let value = matched
+                    .replacingOccurrences(of: #"(?im)^subject:\s*"#, with: "", options: .regularExpression)
+                    .replacingOccurrences(of: #"(?i)^"subject"\s*[:=]\s*""#, with: "", options: .regularExpression)
+                    .replacingOccurrences(of: #"(?i)^subject\s*[:=]\s*"#, with: "", options: .regularExpression)
+                    .trimmingCharacters(in: CharacterSet(charactersIn: "\";,} \n\r\t"))
+
+                if let subject = cleanedSubject(value) {
+                    return subject
+                }
+            }
+        }
+
+        return nil
+    }
+
+    private func cleanedSubject(_ raw: String) -> String? {
+        let subject = raw
+            .replacingOccurrences(of: "\0", with: "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+
+        return subject.isEmpty ? nil : subject
     }
 
     private func url(in raw: String, messageOnly: Bool) -> URL? {

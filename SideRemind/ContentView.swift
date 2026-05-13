@@ -82,14 +82,25 @@ struct ContentView: View {
                     // AppKit overlay handles the actual drop — SwiftUI's onDrop
                     // can't load com.apple.mail.email from NSItemProvider.
                     MailDropOverlay(
-                        onMailDrop: { url in
+                        onMailDrop: { payload in
                             let cal: EKCalendar? = {
                                 switch selection {
                                 case .list(let id): return manager.lists.first { $0.calendarIdentifier == id }
                                 default: return nil
                                 }
                             }()
-                            nav.openNew(calendar: cal, mailURL: url)
+                            let dueDate: Date? = {
+                                switch selection {
+                                case .today: return Date()
+                                default: return nil
+                                }
+                            }()
+                            nav.openNew(
+                                calendar: cal,
+                                dueDate: dueDate,
+                                title: payload.subject,
+                                mailURL: payload.url
+                            )
                         },
                         isTargeted: $isMailDropTargeted
                     )

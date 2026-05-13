@@ -10,13 +10,15 @@ class PanelNavigation: ObservableObject {
     @Published var editingReminder: EKReminder? = nil
     @Published var preselectedCalendar: EKCalendar? = nil
     @Published var defaultDueDate: Date? = nil
+    @Published var draftTitle: String? = nil
     /// A message:// URL dragged in from Mail — attached to the new reminder on save.
     @Published var pendingMailURL: URL? = nil
 
-    func openNew(calendar: EKCalendar? = nil, dueDate: Date? = nil, mailURL: URL? = nil) {
+    func openNew(calendar: EKCalendar? = nil, dueDate: Date? = nil, title: String? = nil, mailURL: URL? = nil) {
         editingReminder     = nil
         preselectedCalendar = calendar
         defaultDueDate      = dueDate
+        draftTitle          = title
         pendingMailURL      = mailURL
         isShowingForm       = true
     }
@@ -25,6 +27,7 @@ class PanelNavigation: ObservableObject {
         editingReminder     = reminder
         preselectedCalendar = reminder.calendar
         defaultDueDate      = reminder.dueDateComponents.flatMap { Calendar.current.date(from: $0) }
+        draftTitle          = nil
         pendingMailURL      = nil
         isShowingForm       = true
     }
@@ -34,6 +37,7 @@ class PanelNavigation: ObservableObject {
         editingReminder     = nil
         preselectedCalendar = nil
         defaultDueDate      = nil
+        draftTitle          = nil
         pendingMailURL      = nil
     }
 }

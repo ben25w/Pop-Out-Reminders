@@ -274,6 +274,8 @@ struct InlineReminderFormView: View {
                 dueDate  = d
             }
         } else {
+            title = nav.draftTitle ?? ""
+
             // New reminder — seed date from defaultDueDate if provided
             if let d = nav.defaultDueDate {
                 hasDate  = true
