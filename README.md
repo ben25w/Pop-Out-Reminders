@@ -94,6 +94,10 @@ If macOS blocks the app because it's not from the App Store: right-click the app
 - **Sections within a list** are not accessible through Apple's public EventKit API — this is an Apple limitation that affects all third-party apps
 - App is not notarised, so macOS Gatekeeper will block it on first open (use right-click → Open to bypass)
 
+## Roadmap
+
+See [ROADMAP.md](ROADMAP.md) for the current next-step plan.
+
 ---
 
 ## License
