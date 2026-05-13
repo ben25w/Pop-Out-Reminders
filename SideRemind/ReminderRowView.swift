@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 import EventKit
 
 struct ReminderRowView: View {
@@ -111,6 +112,20 @@ struct ReminderRowView: View {
                     }
                     .foregroundColor(.orange)
                 }
+            }
+
+            // Mail / URL deep link button
+            if let url = reminder.url {
+                Button {
+                    NSWorkspace.shared.open(url)
+                } label: {
+                    Image(systemName: url.scheme == "message" ? "envelope.fill" : "link")
+                        .font(.system(size: 13))
+                        .foregroundColor(url.scheme == "message" ? Color(.systemBlue) : .accentColor)
+                }
+                .buttonStyle(.plain)
+                .padding(.top, 2)
+                .help(url.scheme == "message" ? "Open in Mail" : url.absoluteString)
             }
 
             Spacer()
