@@ -8,7 +8,7 @@ Built as a free alternative to [Side Reminder](https://sidereminder.com).
 
 ## ⬇️ Download
 
-**[Click here to download the latest version (v1.4.0)](https://github.com/ben25w/Pop-Out-Reminders/releases/latest/download/PopOutReminders-v1.4.0.dmg)**
+**[Click here to download the latest version (v1.5.0)](https://github.com/ben25w/Pop-Out-Reminders/releases/latest/download/PopOutReminders-v1.5.0.dmg)**
 
 > **First time opening?** If macOS blocks the app: right-click the app → **Open** → **Open**. This is normal for apps not distributed through the App Store.
 
