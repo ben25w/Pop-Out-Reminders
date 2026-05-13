@@ -23,21 +23,26 @@ struct ReminderRowView: View {
 
     private var isOverdue: Bool {
         guard let d = dueDate else { return false }
-        return d < Date() && !reminder.isCompleted
+        // Only flag as overdue if the due DATE (not time) is before today
+        return d < Calendar.current.startOfDay(for: Date()) && !reminder.isCompleted
     }
 
     private var dueDateText: String? {
         guard let date = dueDate else { return nil }
-        if date < Date() {
-            let f = RelativeDateTimeFormatter()
-            f.unitsStyle = .full
-            f.dateTimeStyle = .named
-            return f.localizedString(for: date, relativeTo: Date())
-        } else if Calendar.current.isDateInToday(date) {
+        let cal = Calendar.current
+        if cal.isDateInToday(date) {
+            // Always show "Today" for today's reminders regardless of time-of-day,
+            // so midnight-added reminders don't display "17 hours ago"
             if reminder.dueDateComponents?.hour != nil {
                 return date.formatted(.dateTime.hour().minute())
             }
             return "Today"
+        } else if date < cal.startOfDay(for: Date()) {
+            // Past day — show relative (e.g. "3 days ago")
+            let f = RelativeDateTimeFormatter()
+            f.unitsStyle = .full
+            f.dateTimeStyle = .named
+            return f.localizedString(for: date, relativeTo: Date())
         } else {
             return date.formatted(.dateTime.day().month())
         }
