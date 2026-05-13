@@ -1,4 +1,6 @@
 import SwiftUI
+import EventKit
+import UniformTypeIdentifiers
 
 enum SidebarSelection: Hashable {
     case today
@@ -21,6 +23,9 @@ struct ContentView: View {
     // Panel edge drag state
     @State private var panelDragging = false
     @State private var panelDragStartWidth: CGFloat = 0
+
+    // Email drag-drop
+    @State private var isMailDropTargeted = false
 
     var body: some View {
         ZStack(alignment: .leading) {
@@ -58,6 +63,27 @@ struct ContentView: View {
             detailView
                 .environmentObject(manager)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .overlay(alignment: .center) {
+                    if isMailDropTargeted {
+                        RoundedRectangle(cornerRadius: 12)
+                            .strokeBorder(Color.accentColor, lineWidth: 2)
+                            .background(Color.accentColor.opacity(0.08).cornerRadius(12))
+                            .overlay {
+                                VStack(spacing: 8) {
+                                    Image(systemName: "envelope.badge.fill")
+                                        .font(.system(size: 32))
+                                    Text("Drop to link this email")
+                                        .font(.system(size: 13, weight: .medium))
+                                }
+                                .foregroundColor(.accentColor)
+                            }
+                            .padding(12)
+                            .allowsHitTesting(false)
+                    }
+                }
+                .onDrop(of: [UTType.url], isTargeted: $isMailDropTargeted) { providers in
+                    handleEmailDrop(providers)
+                }
         }
     }
 
@@ -109,6 +135,26 @@ struct ContentView: View {
                     }
                     .onEnded { _ in panelDragging = false }
             )
+    }
+
+    // MARK: - Email drag-drop
+
+    private func handleEmailDrop(_ providers: [NSItemProvider]) -> Bool {
+        guard let provider = providers.first,
+              provider.canLoadObject(ofClass: URL.self) else { return false }
+        _ = provider.loadObject(ofClass: URL.self) { url, _ in
+            guard let url = url, url.scheme == "message" else { return }
+            DispatchQueue.main.async {
+                let cal: EKCalendar? = {
+                    switch selection {
+                    case .list(let id): return manager.lists.first { $0.calendarIdentifier == id }
+                    default: return nil
+                    }
+                }()
+                nav.openNew(calendar: cal, mailURL: url)
+            }
+        }
+        return true
     }
 
     // MARK: - Detail view switcher

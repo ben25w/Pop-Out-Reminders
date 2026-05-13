@@ -174,6 +174,31 @@ struct InlineReminderFormView: View {
 
     private var organizationSection: some View {
         VStack(spacing: 0) {
+            // Linked email (dragged in from Mail)
+            if let mailURL = nav.pendingMailURL, nav.editingReminder == nil {
+                HStack {
+                    Image(systemName: "envelope.fill")
+                        .foregroundColor(Color(.systemBlue))
+                        .frame(width: 22)
+                    Text("Linked email")
+                        .font(.system(size: 13))
+                    Spacer()
+                    Button {
+                        nav.pendingMailURL = nil
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+                .background(Color(.controlBackgroundColor).opacity(0.5))
+                .onTapGesture { NSWorkspace.shared.open(mailURL) }
+
+                Divider().padding(.leading, 54)
+            }
+
             // List picker
             if !manager.lists.isEmpty {
                 HStack {
@@ -290,7 +315,8 @@ struct InlineReminderFormView: View {
                 notes: notes.isEmpty ? nil : notes,
                 dueDate: finalDate,
                 calendar: cal,
-                priority: priority
+                priority: priority,
+                url: nav.pendingMailURL
             )
         }
         nav.dismiss()

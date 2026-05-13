@@ -82,12 +82,13 @@ class RemindersManager: ObservableObject {
 
     // MARK: - Mutations
 
-    func addReminder(title: String, notes: String?, dueDate: Date?, calendar: EKCalendar?, priority: Int = 0) throws {
+    func addReminder(title: String, notes: String?, dueDate: Date?, calendar: EKCalendar?, priority: Int = 0, url: URL? = nil) throws {
         let reminder = EKReminder(eventStore: store)
         reminder.title = title
         reminder.notes = notes
         reminder.calendar = calendar ?? store.defaultCalendarForNewReminders()
         reminder.priority = priority
+        reminder.url = url
         if let dueDate {
             reminder.dueDateComponents = Calendar.current.dateComponents(
                 [.year, .month, .day, .hour, .minute], from: dueDate)

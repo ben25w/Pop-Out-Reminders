@@ -5,3 +5,7 @@ build/
 DerivedData/
 *.xcworkspace/xcuserdata/
 .build/
+*.dmg
+
+# AI context / internal docs — not for public repo
+PROJECT_STATUS.md
