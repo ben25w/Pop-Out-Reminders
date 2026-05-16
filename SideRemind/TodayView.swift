@@ -9,13 +9,13 @@ struct TodayView: View {
 
     private var overdueReminders: [EKReminder] {
         manager.todayReminders.filter {
-            ($0.dueDateComponents.flatMap { Calendar.current.date(from: $0) } ?? .distantFuture) < startOfToday
+            (dueDay(for: $0) ?? .distantFuture) < startOfToday
         }
     }
 
     private var dueToday: [EKReminder] {
         manager.todayReminders.filter {
-            ($0.dueDateComponents.flatMap { Calendar.current.date(from: $0) } ?? .distantFuture) >= startOfToday
+            dueDay(for: $0) == startOfToday
         }
     }
 
@@ -105,6 +105,14 @@ struct TodayView: View {
             .padding(.vertical, 6)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(.ultraThinMaterial)
+    }
+
+    private func dueDay(for reminder: EKReminder) -> Date? {
+        let cal = Calendar.current
+        guard let dueDate = reminder.dueDateComponents.flatMap({ cal.date(from: $0) }) else {
+            return nil
+        }
+        return cal.startOfDay(for: dueDate)
     }
 }
 
