@@ -7,7 +7,15 @@ struct SettingsView: View {
     @EnvironmentObject var settings: AppSettings
 
     @State private var orderedIds: [String] = []
-    @State private var launchAtLogin = (SMAppService.mainApp.status == .enabled)
+    @State private var launchAtLogin = Self.launchAtLoginIsEnabled
+    @State private var launchAtLoginMessage: String?
+
+    private static let registeredBundlePathKey = "launchAtLoginRegisteredBundlePath"
+    private static let repairAttemptedBundlePathKey = "launchAtLoginRepairAttemptedBundlePath"
+
+    private static var launchAtLoginIsEnabled: Bool {
+        SMAppService.mainApp.status == .enabled
+    }
 
     private var orderedLists: [EKCalendar] {
         orderedIds.compactMap { id in manager.lists.first { $0.calendarIdentifier == id } }
@@ -28,7 +36,11 @@ struct SettingsView: View {
             }
         }
         .frame(width: 340)
-        .onAppear { seedOrder() }
+        .onAppear {
+            seedOrder()
+            refreshLaunchAtLoginStatus()
+            repairLaunchAtLoginRegistrationIfNeeded()
+        }
     }
 
     // MARK: - Header
@@ -52,24 +64,25 @@ struct SettingsView: View {
         VStack(alignment: .leading, spacing: 12) {
             sectionLabel("GENERAL")
 
-            HStack {
-                Text("Launch at Login")
-                    .font(.system(size: 12, weight: .medium))
-                Spacer()
-                Toggle("", isOn: $launchAtLogin)
+            VStack(alignment: .leading, spacing: 6) {
+                HStack {
+                    Text("Launch at Login")
+                        .font(.system(size: 12, weight: .medium))
+                    Spacer()
+                    Toggle("", isOn: Binding(
+                        get: { launchAtLogin },
+                        set: { updateLaunchAtLogin(to: $0) }
+                    ))
                     .toggleStyle(.switch)
                     .controlSize(.small)
-                    .onChange(of: launchAtLogin) { _, newValue in
-                        do {
-                            if newValue {
-                                try SMAppService.mainApp.register()
-                            } else {
-                                try SMAppService.mainApp.unregister()
-                            }
-                        } catch {
-                            launchAtLogin = !newValue
-                        }
-                    }
+                }
+
+                if let launchAtLoginMessage {
+                    Text(launchAtLoginMessage)
+                        .font(.system(size: 11))
+                        .foregroundColor(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
 
             Divider()
@@ -248,5 +261,61 @@ struct SettingsView: View {
 
     private func commit() {
         settings.calendarOrder = orderedIds
+    }
+
+    private func refreshLaunchAtLoginStatus() {
+        launchAtLogin = Self.launchAtLoginIsEnabled
+
+        switch SMAppService.mainApp.status {
+        case .requiresApproval:
+            launchAtLoginMessage = "Allow Pop Out Reminders in System Settings > General > Login Items."
+        case .notFound:
+            launchAtLoginMessage = "Move Pop Out Reminders to Applications, then turn this on again."
+        default:
+            launchAtLoginMessage = nil
+        }
+    }
+
+    private func updateLaunchAtLogin(to enabled: Bool) {
+        do {
+            if enabled {
+                try SMAppService.mainApp.register()
+                UserDefaults.standard.set(Bundle.main.bundlePath, forKey: Self.registeredBundlePathKey)
+                UserDefaults.standard.removeObject(forKey: Self.repairAttemptedBundlePathKey)
+            } else {
+                try SMAppService.mainApp.unregister()
+                UserDefaults.standard.removeObject(forKey: Self.registeredBundlePathKey)
+                UserDefaults.standard.removeObject(forKey: Self.repairAttemptedBundlePathKey)
+            }
+            refreshLaunchAtLoginStatus()
+        } catch {
+            NSLog("Launch at Login update failed: %@", error.localizedDescription)
+            launchAtLogin = Self.launchAtLoginIsEnabled
+            launchAtLoginMessage = "Could not update Launch at Login: \(error.localizedDescription)"
+        }
+    }
+
+    private func repairLaunchAtLoginRegistrationIfNeeded() {
+        let currentPath = Bundle.main.bundlePath
+        let defaults = UserDefaults.standard
+
+        guard Self.launchAtLoginIsEnabled,
+              currentPath.hasPrefix("/Applications/"),
+              defaults.string(forKey: Self.registeredBundlePathKey) != currentPath,
+              defaults.string(forKey: Self.repairAttemptedBundlePathKey) != currentPath
+        else { return }
+
+        do {
+            try SMAppService.mainApp.unregister()
+            try SMAppService.mainApp.register()
+            defaults.set(currentPath, forKey: Self.registeredBundlePathKey)
+            defaults.removeObject(forKey: Self.repairAttemptedBundlePathKey)
+            refreshLaunchAtLoginStatus()
+        } catch {
+            defaults.set(currentPath, forKey: Self.repairAttemptedBundlePathKey)
+            NSLog("Launch at Login repair failed: %@", error.localizedDescription)
+            launchAtLogin = Self.launchAtLoginIsEnabled
+            launchAtLoginMessage = "Launch at Login needs resetting. Turn it off and on again, then allow it in System Settings if asked."
+        }
     }
 }
